@@ -1,0 +1,32 @@
+name: Publish XML feeds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bundles/**"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore XML files and photos
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat bundles/smartx-avito-payload.tar.gz.part-* > /tmp/smartx-avito-payload.tar.gz
+          tar -xzf /tmp/smartx-avito-payload.tar.gz
+          rm -rf bundles
+      - name: Commit published feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds photos bundles
+          git commit -m "Publish Avito XML feeds and photos"
+          git push
