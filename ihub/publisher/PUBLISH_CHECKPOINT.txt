@@ -1,0 +1,8 @@
+CHECKPOINT: PUBLICATION_CONFIRMED
+Source XML files were used as the source of truth: 20010 + 20010 ads.
+Only Images blocks were changed; all data outside Images passed byte-normalized comparison.
+Every ad contains exactly 6 approved images: one matching SKU cover plus five universal cards.
+74 approved JPG images are published at permanent raw.githubusercontent.com HTTPS URLs.
+PART 1 and PART 2 URL XML feeds are published and publicly reachable.
+GitHub Actions verified 74 image URLs and both XML URLs after push.
+Next step: connect the two published feed URLs in Avito Autoload and inspect Avito processing report.
