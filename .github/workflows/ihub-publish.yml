@@ -3,7 +3,7 @@ name: Publish iHub Avito URL feeds
 on:
   push:
     paths:
-      - 'ihub/_upload/ihub_bundle.tar.gz'
+      - 'ihub/publisher/RUN_NOW_20261005'
 
 permissions:
   contents: write
@@ -17,13 +17,15 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Restore approved source bundle
+      - name: Download approved source bundle
         shell: bash
         run: |
           set -euo pipefail
-          test -s ihub/_upload/ihub_bundle.tar.gz
+          curl -fL --retry 3 --retry-delay 2 'https://sdmntprdenmarkeast.oaiusercontent.com/files/00000000-c808-8210-9538-d65990e0d2ed/raw?se=2026-10-05T14%3A04%3A28Z&sp=r&sv=2026-02-06&sr=b&scid=e0e39b1a-b1ba-5dc4-9fc9-3b7792766a7f&skoid=002823aa-689d-47ca-9347-108c20f4f00d&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-05T06%3A33%3A30Z&ske=2026-10-06T06%3A33%3A30Z&sks=b&skv=2026-02-06&sig=71jk5Omr8yu4ILdaKzypAX8O6yBDZ/eBEjBzWPMQ0pY%3D' -o /tmp/ihub_bundle.tar.gz
+          test "$(stat -c%s /tmp/ihub_bundle.tar.gz)" -eq 17779679
+          echo 'ef13603050e2c249db026d21bf5128f27bfc5f3c3a4afeae1ed88fe528672418  /tmp/ihub_bundle.tar.gz' | sha256sum -c -
           mkdir -p /tmp/ihub_bundle
-          tar -xzf ihub/_upload/ihub_bundle.tar.gz -C /tmp/ihub_bundle
+          tar -xzf /tmp/ihub_bundle.tar.gz -C /tmp/ihub_bundle
           test "$(find /tmp/ihub_bundle/images -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 74
           test -s /tmp/ihub_bundle/source_part1.xml
           test -s /tmp/ihub_bundle/source_part2.xml
