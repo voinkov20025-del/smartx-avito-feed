@@ -1,9 +1,22 @@
-CHECKPOINT: PIPELINE_REPAIRED
+CHECKPOINT: SOURCE_XML_PIPELINE_READY
 Completed:
-- Exact failure identified: corrupted/truncated Base64 config caused Incorrect padding.
-- GitHub Actions workflow changed to restore an approved upload bundle.
-- Publisher generator changed so photo regeneration is disabled; it now requires already-approved image files.
-- Public URL verification step added for all 74 images and both XML feeds after push.
+- Confirmed there is no newer iHub workflow run after failed run 37301397859; Incorrect padding is not treated as a current failure.
+- Located the two source-of-truth XML files: 20010 + 20010 ads = 40020.
+- Source PART 1 SHA256: c69a3da7b64544145be603156605a51cfd905e23391b7dc8f73270e1d8bf5717.
+- Source PART 2 SHA256: 7a1104b7fa039421359f74fcf483a0c281d1cf24e76454dddcdc77cf18aba0b1.
+- Confirmed exactly 69 SKU combinations across the source XML files.
+- Added ihub/publisher/publish_from_sources.py. It preserves each source XML byte stream and replaces only the Images block in every Ad.
+- Local full validation passed: 40020 ads, 40020 unique preserved IDs, exactly 6 images per ad, 69 SKU covers + 5 universal images, 74 unique image URLs, all data outside Images byte-identical after Images normalization.
+- Local output PART 1 SHA256: b4c73af550d77557a031788f09b93780ec8806d6badc1d41c7dbbb703f901570.
+- Local output PART 2 SHA256: 0f69aa4e3ca95dbab3551dbb5b4b6de5801dd0d16515cd99bf8ef105fb3946cd.
+- Workflow now accepts one prepared archive at ihub/_upload/ihub_bundle.tar.gz and starts automatically when that file is committed.
+Current blocker:
+- The connected GitHub API tool in this chat has no binary/local-file upload parameter, so the prepared archive cannot be transferred into the repository directly through this connector.
+- No source data is missing and no new publication error exists because the corrected workflow has not started yet.
+Prepared transfer archive:
+- iHub_GitHub_Transfer_Bundle.tar.gz
+- size: 17779679 bytes
+- contents: source_part1.xml, source_part2.xml, images/ with exactly 74 approved JPG files.
 Next step:
-- Upload the approved image/config bundle chunks to ihub/_upload_chunks/.
-- Create ihub/_upload_chunks/READY last to trigger publication.
+- Put the prepared archive in repository path ihub/_upload/ihub_bundle.tar.gz. That single commit triggers the corrected publication workflow automatically.
+- Then inspect the new workflow run; fix only a concrete failing step if one appears.
