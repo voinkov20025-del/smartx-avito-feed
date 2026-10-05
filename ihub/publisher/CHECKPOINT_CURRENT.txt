@@ -1,0 +1,9 @@
+CHECKPOINT: PIPELINE_REPAIRED
+Completed:
+- Exact failure identified: corrupted/truncated Base64 config caused Incorrect padding.
+- GitHub Actions workflow changed to restore an approved upload bundle.
+- Publisher generator changed so photo regeneration is disabled; it now requires already-approved image files.
+- Public URL verification step added for all 74 images and both XML feeds after push.
+Next step:
+- Upload the approved image/config bundle chunks to ihub/_upload_chunks/.
+- Create ihub/_upload_chunks/READY last to trigger publication.
