@@ -1,0 +1,12 @@
+STATUS: PASS
+Total ads: 40020
+Parts: 20010 + 20010
+Unique IDs: 40020
+Images per ad: exactly 6
+Unique SKU covers used: 69
+Unique image URLs: 74
+Non-Images fields: byte-identical after Images normalization
+Source source_part1.xml SHA256: c69a3da7b64544145be603156605a51cfd905e23391b7dc8f73270e1d8bf5717
+Output iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml SHA256: b4c73af550d77557a031788f09b93780ec8806d6badc1d41c7dbbb703f901570
+Source source_part2.xml SHA256: 7a1104b7fa039421359f74fcf483a0c281d1cf24e76454dddcdc77cf18aba0b1
+Output iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml SHA256: 0f69aa4e3ca95dbab3551dbb5b4b6de5801dd0d16515cd99bf8ef105fb3946cd
