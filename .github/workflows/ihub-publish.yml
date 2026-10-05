@@ -1,0 +1,140 @@
+name: Publish iHub Avito feed
+
+on:
+  push:
+    paths:
+      - 'ihub/_upload_chunks/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild upload bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ihub/_upload_chunks/chunk_*.txt > /tmp/ihub_bundle.b64
+          base64 -d /tmp/ihub_bundle.b64 > /tmp/ihub_bundle.tar.gz
+          mkdir -p /tmp/ihub_bundle
+          tar -xzf /tmp/ihub_bundle.tar.gz -C /tmp/ihub_bundle
+
+      - name: Publish images and URL feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import gzip, re, shutil, json
+          from collections import Counter
+          import xml.etree.ElementTree as ET
+
+          repo = Path.cwd()
+          bundle = Path('/tmp/ihub_bundle')
+          image_src = bundle / 'images'
+          image_dst = repo / 'ihub' / 'images' / '2026-10-05'
+          feed_dst = repo / 'ihub' / 'feeds'
+          image_dst.mkdir(parents=True, exist_ok=True)
+          feed_dst.mkdir(parents=True, exist_ok=True)
+
+          jpgs = sorted(image_src.glob('*.jpg'))
+          if len(jpgs) != 74:
+              raise SystemExit(f'Expected 74 JPG files, got {len(jpgs)}')
+          for p in jpgs:
+              shutil.copy2(p, image_dst / p.name)
+
+          base_url = 'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/images/2026-10-05'
+          jpg_names = {p.name for p in jpgs}
+
+          manifest = []
+          for i, p in enumerate(jpgs, 1):
+              manifest.append({'number': i, 'filename': p.name, 'url': f'{base_url}/{p.name}'})
+          (repo/'ihub'/'iHub_PUBLIC_PHOTO_URLS.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+
+          image_pat = re.compile(r'<Image name="([^"]+)\.png"/>')
+
+          def transform(src_gz, out_name):
+              with gzip.open(src_gz, 'rt', encoding='utf-8') as f:
+                  text = f.read()
+              def repl(m):
+                  jpg = m.group(1) + '.jpg'
+                  if jpg not in jpg_names:
+                      raise SystemExit(f'Missing image in bundle: {jpg}')
+                  return f'<Image url="{base_url}/{jpg}"/>'
+              new_text, count = image_pat.subn(repl, text)
+              if count != 20010 * 6:
+                  raise SystemExit(f'Unexpected image replacement count for {out_name}: {count}')
+              if '<Image name=' in new_text:
+                  raise SystemExit(f'Image name attribute remains in {out_name}')
+              out = feed_dst / out_name
+              out.write_text(new_text, encoding='utf-8')
+              if out.stat().st_size >= 100 * 1024 * 1024:
+                  raise SystemExit(f'{out_name} exceeds GitHub 100 MiB limit')
+              return out, count
+
+          p1, c1 = transform(bundle/'part1.xml.gz', 'iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml')
+          p2, c2 = transform(bundle/'part2.xml.gz', 'iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml')
+
+          ids = set()
+          total_ads = 0
+          all_urls = Counter()
+          first_urls = Counter()
+          bad_counts = []
+          for feed in [p1, p2]:
+              for event, elem in ET.iterparse(feed, events=('end',)):
+                  if elem.tag != 'Ad':
+                      continue
+                  total_ads += 1
+                  aid = (elem.findtext('Id') or '').strip()
+                  if aid in ids:
+                      raise SystemExit(f'Duplicate ID: {aid}')
+                  ids.add(aid)
+                  imgs = elem.find('Images')
+                  urls = [(x.attrib.get('url') or '').strip() for x in imgs.findall('Image')]
+                  if len(urls) != 6:
+                      bad_counts.append((aid, len(urls)))
+                  for u in urls:
+                      all_urls[u] += 1
+                  first_urls[urls[0]] += 1
+                  elem.clear()
+
+          if total_ads != 40020 or len(ids) != 40020:
+              raise SystemExit(f'Unexpected ad/id totals: {total_ads}/{len(ids)}')
+          if bad_counts:
+              raise SystemExit(f'Ads with bad image counts: {bad_counts[:3]}')
+          if len(all_urls) != 74:
+              raise SystemExit(f'Expected 74 unique URLs, got {len(all_urls)}')
+          if len(first_urls) != 69 or set(first_urls.values()) != {580}:
+              raise SystemExit('SKU first-image usage check failed')
+
+          universal = [
+              'universal-02-avito-delivery.jpg',
+              'universal-03-check-phone.jpg',
+              'universal-04-yandex-split.jpg',
+              'universal-05-store-moscow.jpg',
+              'universal-06-benefits.jpg',
+          ]
+          for fn in universal:
+              url = f'{base_url}/{fn}'
+              if all_urls[url] != 40020:
+                  raise SystemExit(f'Universal usage failed for {fn}: {all_urls[url]}')
+
+          report = f'''iHub URL FEED FINAL VALIDATION\n================================\nSTATUS: PASS\n\nImages published: 74\nFeed PART 1 ads: 20010\nFeed PART 2 ads: 20010\nTotal ads: {total_ads}\nUnique IDs: {len(ids)}\nAds with exactly 6 image URLs: {total_ads}\nTotal image references: {sum(all_urls.values())}\nUnique image URLs: {len(all_urls)}\nUnique SKU cover URLs: {len(first_urls)}\nEach SKU cover used as first image exactly 580 times: PASS\nEach universal image used exactly 40020 times: PASS\nOnly direct HTTPS raw.githubusercontent.com image URLs are used: PASS\nImage-name mode removed from feeds: PASS\n\nPART 1 URL:\nhttps://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml\n\nPART 2 URL:\nhttps://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml\n'''
+          (repo/'ihub'/'iHub_URL_FEED_FINAL_VALIDATION.txt').write_text(report, encoding='utf-8')
+          PY
+
+      - name: Commit published files and cleanup uploader
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub feed publisher'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ihub/images/2026-10-05 ihub/feeds ihub/iHub_PUBLIC_PHOTO_URLS.json ihub/iHub_URL_FEED_FINAL_VALIDATION.txt
+          git rm -r ihub/_upload_chunks
+          git rm .github/workflows/ihub-publish.yml
+          git commit -m 'Publish iHub Avito URL feeds and 74 images'
+          git push origin main
