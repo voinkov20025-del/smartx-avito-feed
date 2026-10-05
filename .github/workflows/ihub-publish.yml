@@ -3,7 +3,7 @@ name: Publish iHub Avito URL feeds
 on:
   push:
     paths:
-      - 'ihub/publisher/READY'
+      - 'ihub/_upload_chunks/READY'
 
 permissions:
   contents: write
@@ -20,14 +20,35 @@ jobs:
       - name: Install image dependency
         run: python3 -m pip install --disable-pip-version-check pillow
 
-      - name: Generate 74 public images and two URL feeds
+      - name: Restore approved upload bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ihub/_upload_chunks/chunk_*.txt > /tmp/ihub_bundle.b64
+          base64 -d /tmp/ihub_bundle.b64 > /tmp/ihub_bundle.tar.gz
+          mkdir -p /tmp/ihub_bundle
+          tar -xzf /tmp/ihub_bundle.tar.gz -C /tmp/ihub_bundle
+          test "$(find /tmp/ihub_bundle/images -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 74
+          test -s /tmp/ihub_bundle/ihub_publisher_config.zlib.b64
+
+      - name: Install approved images and repaired config
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ihub/images/2026-10-05
+          mkdir -p ihub/images/2026-10-05
+          cp /tmp/ihub_bundle/images/*.jpg ihub/images/2026-10-05/
+          cp /tmp/ihub_bundle/ihub_publisher_config.zlib.b64 ihub/publisher/ihub_publisher_config.zlib.b64
+
+      - name: Build URL feeds without regenerating photos
         run: |
           set -euo pipefail
           python3 ihub/publisher/generate_url_feed.py \
             --config ihub/publisher/ihub_publisher_config.zlib.b64 \
             --out .
 
-      - name: Verify generated file sizes
+      - name: Validate generated assets
+        shell: bash
         run: |
           set -euo pipefail
           test "$(find ihub/images/2026-10-05 -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 74
@@ -36,16 +57,76 @@ jobs:
           test "$(stat -c%s ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml)" -lt 104857600
           test "$(stat -c%s ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml)" -lt 104857600
           grep -q 'STATUS: PASS' ihub/iHub_URL_FEED_FINAL_VALIDATION.txt
+          grep -q 'Total ads: 40020' ihub/iHub_URL_FEED_FINAL_VALIDATION.txt
+          grep -q 'Unique image URLs: 74' ihub/iHub_URL_FEED_FINAL_VALIDATION.txt
 
-      - name: Commit published assets
+      - name: Publish assets to main
+        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'iHub feed publisher'
           git config user.email 'actions@users.noreply.github.com'
-          git add ihub/images/2026-10-05 ihub/feeds ihub/iHub_PUBLIC_PHOTO_URLS.json ihub/iHub_URL_FEED_FINAL_VALIDATION.txt
-          if git diff --cached --quiet; then
-            echo 'No generated changes to commit.'
-            exit 0
-          fi
-          git commit -m 'Publish iHub Avito URL feeds and 74 public images'
+          git add ihub/images/2026-10-05 ihub/feeds ihub/iHub_PUBLIC_PHOTO_URLS.json ihub/iHub_URL_FEED_FINAL_VALIDATION.txt ihub/publisher/ihub_publisher_config.zlib.b64
+          git commit -m 'Publish iHub Avito URL feeds and approved images'
+          git push origin main
+
+      - name: Confirm public HTTPS availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 5
+          python3 - <<'PY'
+          import json, urllib.request, time
+          from pathlib import Path
+          manifest=json.loads(Path('ihub/iHub_PUBLIC_PHOTO_URLS.json').read_text(encoding='utf-8'))
+          assert len(manifest)==74
+          errors=[]
+          for item in manifest:
+              url=item['url']; ok=False; last=''
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'iHub-Avito-feed-check/1.0'})
+                      with urllib.request.urlopen(req,timeout=20) as r:
+                          ctype=(r.headers.get('Content-Type') or '').lower(); head=r.read(64)
+                          if r.status==200 and ('image/jpeg' in ctype or head[:2]==b'\xff\xd8'):
+                              ok=True; break
+                          last=f'status={r.status} content-type={ctype}'
+                  except Exception as e: last=repr(e)
+                  time.sleep(2)
+              if not ok: errors.append((url,last))
+          feeds=[
+            'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml',
+            'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml',
+          ]
+          for url in feeds:
+              ok=False; last=''
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'iHub-Avito-feed-check/1.0','Range':'bytes=0-255'})
+                      with urllib.request.urlopen(req,timeout=30) as r:
+                          head=r.read(256)
+                          if r.status in (200,206) and b'<Ads' in head:
+                              ok=True; break
+                          last=f'status={r.status}'
+                  except Exception as e: last=repr(e)
+                  time.sleep(2)
+              if not ok: errors.append((url,last))
+          if errors: raise SystemExit('PUBLIC URL CHECK FAILED: '+repr(errors[:5]))
+          print('PUBLIC URL CHECK PASS: 74 images + 2 XML feeds')
+          PY
+
+      - name: Save final publication checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > ihub/publisher/PUBLISH_CHECKPOINT.txt <<'EOF'
+          CHECKPOINT: PUBLICATION_CONFIRMED
+          74 approved JPG images are published at permanent raw.githubusercontent.com HTTPS URLs.
+          PART 1 and PART 2 URL XML feeds are published and publicly reachable.
+          GitHub Actions verified 74 image URLs and both XML URLs after push.
+          No photo regeneration was performed; the approved image files were used.
+          Next step: connect the two published feed URLs in Avito Autoload and inspect Avito processing report.
+          EOF
+          git add ihub/publisher/PUBLISH_CHECKPOINT.txt
+          git commit -m 'Confirm iHub public URL availability'
           git push origin main
