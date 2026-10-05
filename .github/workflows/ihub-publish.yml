@@ -3,7 +3,7 @@ name: Publish iHub Avito URL feeds
 on:
   push:
     paths:
-      - 'ihub/_upload_chunks/READY'
+      - 'ihub/_upload/ihub_bundle.tar.gz'
 
 permissions:
   contents: write
@@ -21,10 +21,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat ihub/_upload_chunks/chunk_*.txt > /tmp/ihub_bundle.b64
-          base64 -d /tmp/ihub_bundle.b64 > /tmp/ihub_bundle.tar.gz
+          test -s ihub/_upload/ihub_bundle.tar.gz
           mkdir -p /tmp/ihub_bundle
-          tar -xzf /tmp/ihub_bundle.tar.gz -C /tmp/ihub_bundle
+          tar -xzf ihub/_upload/ihub_bundle.tar.gz -C /tmp/ihub_bundle
           test "$(find /tmp/ihub_bundle/images -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 74
           test -s /tmp/ihub_bundle/source_part1.xml
           test -s /tmp/ihub_bundle/source_part2.xml
