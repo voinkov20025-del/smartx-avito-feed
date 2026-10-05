@@ -1,0 +1,21 @@
+iHub Avito URL feeds — FINAL
+
+PART 1 (20,010 ads):
+https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_1_00001-20010.xml
+
+PART 2 (20,010 ads):
+https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml
+
+Images manifest:
+https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/iHub_PUBLIC_PHOTO_URLS.json
+
+Validation:
+STATUS: PASS
+Total ads: 40,020
+Parts: 20,010 + 20,010
+Unique IDs: 40,020
+Images per ad: exactly 6
+Unique SKU covers: 69
+Unique public image URLs: 74
+Only Images changed relative to the two source XML files.
+GitHub Actions independently confirmed public HTTPS access to all 74 images and both XML feeds.
