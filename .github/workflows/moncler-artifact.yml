@@ -15,12 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: moncler-feed-20261020-v2
       - name: Validate XML exists
         run: test -s feeds/Moncler_Cardigan_3000_4900.xml
       - name: Upload XML artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Moncler_Cardigan_3000_4900
+          name: Moncler_Cardigan_3000_4900_CORRECTED
           path: feeds/Moncler_Cardigan_3000_4900.xml
           if-no-files-found: error
           retention-days: 7
