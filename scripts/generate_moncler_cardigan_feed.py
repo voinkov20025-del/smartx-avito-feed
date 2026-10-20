@@ -12,10 +12,10 @@ OUT = Path("feeds/Moncler_Cardigan_3000_4900.xml")
 PRICE = "4900"
 PHONE = "79175142375"
 SIZES = "46 / 48 / 50 / 52"
-AVITO_SIZES = "46 (S)|48 (M)|50 (L)|52 (XL)"
+AVITO_SIZES = "46 (S)|48 (M)|50 (L)|52 (L/XL)"
 
 VARIANTS = [
-    {"code":"BLK","title_color":"черный","desc_color":"Черный","color":"Черный","color_name":"Черный","prefix":"moncler_black","ext":"jpg"},
+    {"code":"BLK","title_color":"черный","desc_color":"Черный","color":"Черный","color_name":"Черный","prefix":"moncler_black","ext":"jpeg"},
     {"code":"GRY","title_color":"серый","desc_color":"Серый","color":"Серый","color_name":"Серый","prefix":"moncler_gray","ext":"png"},
     {"code":"KHK","title_color":"хаки","desc_color":"Хаки","color":"Зеленый","color_name":"Хаки","prefix":"moncler_khaki","ext":"png"},
 ]
@@ -89,10 +89,10 @@ def build() -> None:
             add(ad, "AdType", "Товар приобретен на продажу")
             add(ad, "Brand", "Moncler")
 
-            # Мужская одежда: Тип товара -> Предмет одежды -> Размер.
+            # Avito taxonomy for men's sweaters/cardigans.
             add(ad, "Apparel", "Кофты и футболки")
-            add(ad, "ApparelType", "Кофта")
-            # Одна карточка содержит весь размерный ряд, без размножения объявлений.
+            add(ad, "GoodsSubType", "Кардиган")
+            # One ad contains the whole size range; no separate ads by size.
             add(ad, "Size", AVITO_SIZES)
 
             add(ad, "Color", variant["color"])
@@ -113,10 +113,10 @@ def build() -> None:
     ids = [ad.findtext("Id") for ad in ads]
     assert len(ads) == 3000 and len(set(ids)) == 3000
     assert all(ad.findtext("Apparel") == "Кофты и футболки" for ad in ads)
-    assert all(ad.findtext("ApparelType") == "Кофта" for ad in ads)
+    assert all(ad.findtext("GoodsSubType") == "Кардиган" for ad in ads)
     assert all(ad.findtext("Size") == AVITO_SIZES for ad in ads)
     assert all(len(ad.find("Images").findall("Image")) == 6 for ad in ads)
-    print(f"Generated {OUT}: 3000 ads; Apparel=Кофты и футболки; ApparelType=Кофта; Size={AVITO_SIZES}")
+    print(f"Generated {OUT}: 3000 ads; Apparel=Кофты и футболки; GoodsSubType=Кардиган; Size={AVITO_SIZES}")
 
 
 if __name__ == "__main__":
