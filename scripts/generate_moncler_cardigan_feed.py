@@ -12,7 +12,11 @@ OUT = Path("feeds/Moncler_Cardigan_3000_4900.xml")
 PRICE = "4900"
 PHONE = "79175142375"
 SIZES = "46 / 48 / 50 / 52"
-AVITO_SIZES = "46 (S)|48 (M)|50 (L)|52 (L/XL)"
+# Avito accepts one structured Size value for this category. Because one ad
+# represents several sizes, use the valid generic value and keep the exact
+# available sizes in the title/description instead of sending a pipe-separated
+# Size value, which Avito rejects as an invalid mandatory parameter.
+AVITO_SIZE = "Без размера"
 
 VARIANTS = [
     {"code":"BLK","title_color":"черный","desc_color":"Черный","color":"Черный","color_name":"Черный","prefix":"moncler_black","ext":"jpeg"},
@@ -89,11 +93,12 @@ def build() -> None:
             add(ad, "AdType", "Товар приобретен на продажу")
             add(ad, "Brand", "Moncler")
 
-            # Avito taxonomy for men's sweaters/cardigans.
             add(ad, "Apparel", "Кофты и футболки")
             add(ad, "GoodsSubType", "Кардиган")
-            # One ad contains the whole size range; no separate ads by size.
-            add(ad, "Size", AVITO_SIZES)
+            # The exact sizes 46/48/50/52 are stated in the description. Avito's
+            # structured Size field gets one valid value so the 3000-ad structure
+            # remains 1000 cities × 3 colors instead of becoming 12000 ads.
+            add(ad, "Size", AVITO_SIZE)
 
             add(ad, "Color", variant["color"])
             add(ad, "ColorName", variant["color_name"])
@@ -114,9 +119,9 @@ def build() -> None:
     assert len(ads) == 3000 and len(set(ids)) == 3000
     assert all(ad.findtext("Apparel") == "Кофты и футболки" for ad in ads)
     assert all(ad.findtext("GoodsSubType") == "Кардиган" for ad in ads)
-    assert all(ad.findtext("Size") == AVITO_SIZES for ad in ads)
+    assert all(ad.findtext("Size") == AVITO_SIZE for ad in ads)
     assert all(len(ad.find("Images").findall("Image")) == 6 for ad in ads)
-    print(f"Generated {OUT}: 3000 ads; Apparel=Кофты и футболки; GoodsSubType=Кардиган; Size={AVITO_SIZES}")
+    print(f"Generated {OUT}: 3000 ads; GoodsSubType=Кардиган; Size={AVITO_SIZE}; exact sizes in description")
 
 
 if __name__ == "__main__":
