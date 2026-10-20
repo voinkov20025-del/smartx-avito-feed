@@ -1,0 +1,37 @@
+name: Generate Moncler cardigan Avito feed
+
+on:
+  push:
+    branches:
+      - moncler-feed-20261020
+    paths:
+      - 'scripts/generate_moncler_cardigan_feed.py'
+      - '.github/workflows/generate-moncler-cardigan-feed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: moncler-feed-20261020
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate XML
+        run: python scripts/generate_moncler_cardigan_feed.py
+      - name: Commit generated feed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add feeds/Moncler_Cardigan_3000_4900.xml
+          if git diff --cached --quiet; then
+            echo 'No changes'
+          else
+            git commit -m 'Generate Moncler cardigan 3000-ad feed'
+            git push origin HEAD:moncler-feed-20261020
+          fi
