@@ -1,0 +1,26 @@
+name: Package Moncler XML
+
+on:
+  push:
+    branches: [moncler-feed-20261020-v2]
+    paths:
+      - ".github/workflows/moncler-artifact.yml"
+      - "feeds/Moncler_Cardigan_3000_4900.xml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate XML exists
+        run: test -s feeds/Moncler_Cardigan_3000_4900.xml
+      - name: Upload XML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moncler_Cardigan_3000_4900
+          path: feeds/Moncler_Cardigan_3000_4900.xml
+          if-no-files-found: error
+          retention-days: 7
