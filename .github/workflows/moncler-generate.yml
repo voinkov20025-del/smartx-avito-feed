@@ -1,0 +1,49 @@
+name: Generate Moncler Avito feed
+
+on:
+  push:
+    branches: [moncler-feed-20261020-v2]
+    paths:
+      - "scripts/generate_moncler_cardigan_feed.py"
+      - ".github/workflows/moncler-generate.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: moncler-feed-20261020-v2
+      - name: Generate XML
+        run: python3 scripts/generate_moncler_cardigan_feed.py
+      - name: Validate XML
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          p='feeds/Moncler_Cardigan_3000_4900.xml'
+          root=ET.parse(p).getroot()
+          ads=root.findall('Ad')
+          ids=[a.findtext('Id') for a in ads]
+          assert len(ads)==3000
+          assert len(set(ids))==3000
+          assert all(a.findtext('Price')=='4900' for a in ads)
+          assert all(a.find('Size') is None for a in ads)
+          assert all(len(a.find('Images').findall('Image'))==6 for a in ads)
+          print('PASS: 3000 ads, unique IDs, 4900 price, no Size tags, 6 images/ad')
+          PY
+      - name: Commit generated feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/Moncler_Cardigan_3000_4900.xml
+          if git diff --cached --quiet; then
+            echo "No feed changes"
+            exit 0
+          fi
+          git commit -m "Generate Moncler 3000-ad Avito XML"
+          git push origin HEAD:moncler-feed-20261020-v2
