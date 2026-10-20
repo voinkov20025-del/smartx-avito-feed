@@ -30,9 +30,11 @@ jobs:
           assert len(ads)==3000
           assert len(set(ids))==3000
           assert all(a.findtext('Price')=='4900' for a in ads)
-          assert all(a.find('Size') is None for a in ads)
+          assert all(a.findtext('Apparel')=='Джемперы, свитеры, кардиганы' for a in ads)
+          assert all(a.findtext('ApparelType')=='Кофта' for a in ads)
+          assert all(a.findtext('Size')=='Без размера' for a in ads)
           assert all(len(a.find('Images').findall('Image'))==6 for a in ads)
-          print('PASS: 3000 ads, unique IDs, 4900 price, no Size tags, 6 images/ad')
+          print('PASS: 3000 ads, required clothing type and Size fields, 6 images/ad')
           PY
       - name: Commit generated feed
         shell: bash
@@ -45,5 +47,5 @@ jobs:
             echo "No feed changes"
             exit 0
           fi
-          git commit -m "Generate Moncler 3000-ad Avito XML"
+          git commit -m "Generate corrected Moncler 3000-ad Avito XML"
           git push origin HEAD:moncler-feed-20261020-v2
