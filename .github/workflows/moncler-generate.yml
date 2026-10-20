@@ -27,16 +27,17 @@ jobs:
           root=ET.parse(p).getroot()
           ads=root.findall('Ad')
           ids=[a.findtext('Id') for a in ads]
-          sizes='46 (S)|48 (M)|50 (L)|52 (XL)'
+          sizes='46 (S)|48 (M)|50 (L)|52 (L/XL)'
           assert len(ads)==3000
           assert len(set(ids))==3000
           assert all(a.findtext('Price')=='4900' for a in ads)
           assert all(a.findtext('GoodsType')=='Мужская одежда' for a in ads)
           assert all(a.findtext('Apparel')=='Кофты и футболки' for a in ads)
-          assert all(a.findtext('ApparelType')=='Кофта' for a in ads)
+          assert all(a.findtext('GoodsSubType')=='Кардиган' for a in ads)
+          assert all(a.find('ApparelType') is None for a in ads)
           assert all(a.findtext('Size')==sizes for a in ads)
           assert all(len(a.find('Images').findall('Image'))==6 for a in ads)
-          print('PASS: 3000 ads, mens clothing taxonomy, combined sizes, 6 images/ad')
+          print('PASS: 3000 ads, GoodsSubType=Кардиган, combined valid sizes, 6 images/ad')
           PY
       - name: Commit generated feed
         shell: bash
