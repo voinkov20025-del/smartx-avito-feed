@@ -124,7 +124,16 @@ def build() -> None:
             add(ad, "Season", "Демисезон")
             add(ad, "AdType", "Товар приобретен на продажу")
             add(ad, "Brand", "Moncler")
+
+            # Актуальная цепочка параметров одежды Avito:
+            # Тип товара -> Предмет одежды -> Размер.
             add(ad, "Apparel", "Джемперы, свитеры, кардиганы")
+            add(ad, "ApparelType", "Кофта")
+            # Не делаем отдельные карточки по размерам. Обязательное поле
+            # заполняем допустимым значением «Без размера», а фактические
+            # размеры 46/48/50/52 остаются в описании.
+            add(ad, "Size", "Без размера")
+
             add(ad, "Color", variant["color"])
             add(ad, "ColorName", variant["color_name"])
             add(ad, "MultiItem", "Да")
@@ -144,18 +153,24 @@ def build() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     ET.ElementTree(root).write(OUT, encoding="utf-8", xml_declaration=True)
 
-    # Self-checks
     check = ET.parse(OUT).getroot()
     ads = check.findall("Ad")
     ids = [ad.findtext("Id") for ad in ads]
     if len(ads) != 3000 or len(set(ids)) != 3000:
         raise RuntimeError("Invalid ad/ID count")
-    if any(ad.find("Size") is not None for ad in ads):
-        raise RuntimeError("Size tag must not be present")
+    if any(ad.findtext("Apparel") != "Джемперы, свитеры, кардиганы" for ad in ads):
+        raise RuntimeError("Invalid Apparel")
+    if any(ad.findtext("ApparelType") != "Кофта" for ad in ads):
+        raise RuntimeError("Invalid ApparelType")
+    if any(ad.findtext("Size") != "Без размера" for ad in ads):
+        raise RuntimeError("Invalid Size")
     if any(len(ad.find("Images").findall("Image")) != 6 for ad in ads):
         raise RuntimeError("Every ad must contain exactly 6 images")
 
-    print(f"Generated {OUT}: {len(ads)} ads, {len(cities)} cities, price {PRICE}, no Size tags")
+    print(
+        f"Generated {OUT}: {len(ads)} ads, {len(cities)} cities, price {PRICE}, "
+        "ApparelType=Кофта, Size=Без размера"
+    )
 
 
 if __name__ == "__main__":
