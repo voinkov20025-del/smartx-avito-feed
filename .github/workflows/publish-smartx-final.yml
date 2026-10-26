@@ -104,15 +104,15 @@ jobs:
 
           for feed in feeds:
               text = feed.read_text(encoding='utf-8')
-              ads = re.findall(r'<Ad\\b[\\s\\S]*?</Ad>', text)
+              ads = re.findall('<Ad>.*?</Ad>', text, flags=re.S)
               assert len(ads) == 20000, (feed.name, len(ads))
               total += len(ads)
               for ad in ads:
-                  m = re.search(r'<Id>(.*?)</Id>', ad, re.S)
+                  m = re.search('<Id>(.*?)</Id>', ad, re.S)
                   assert m, 'Missing Id'
                   ad_id = m.group(1).strip()
                   all_ids.append(ad_id)
-                  urls = re.findall(r'<Image\\s+url="([^"]+)"\\s*/?>', ad)
+                  urls = re.findall('<Image url="([^"]+)"', ad)
                   assert len(urls) == 6, (ad_id, len(urls))
                   assert all(url.startswith(prefix) for url in urls), ad_id
                   referenced.update(url.rsplit('/', 1)[-1] for url in urls)
