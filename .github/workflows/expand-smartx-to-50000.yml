@@ -1,0 +1,219 @@
+name: Expand SmartX to 50000
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/expand-smartx-to-50000.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build 10000 ads in entirely new SmartX cities
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv, io, re, urllib.request, copy
+          from collections import Counter
+
+          feed1 = Path('feeds/smartx-final-part-1-00001-20000.xml')
+          feed2 = Path('feeds/smartx-final-part-2-20001-40000.xml')
+          out = Path('feeds/smartx-final-part-3-40001-50000.xml')
+          report = Path('feeds/smartx-new-cities-40001-50000.txt')
+
+          texts = [feed1.read_text(encoding='utf-8'), feed2.read_text(encoding='utf-8')]
+          ad_pat = re.compile(r'<Ad>.*?</Ad>', re.S)
+          id_pat = re.compile(r'<Id>(.*?)</Id>', re.S)
+          addr_pat = re.compile(r'<Address>(.*?)</Address>', re.S)
+          img_pat = re.compile(r'<Image url="[^"]+"')
+
+          old_ads = []
+          for p, text in zip([feed1, feed2], texts):
+              ads = ad_pat.findall(text)
+              assert len(ads) == 20000, (p.name, len(ads))
+              old_ads.extend(ads)
+          assert len(old_ads) == 40000
+
+          old_ids = [id_pat.search(a).group(1).strip() for a in old_ads]
+          assert len(set(old_ids)) == 40000
+
+          def norm(s):
+              s = s.lower().replace('ё','е').strip()
+              s = re.sub(r'\s+', ' ', s)
+              s = re.sub(r'^(?:г\.о\.|г\.|городской округ|город)\s*', '', s).strip()
+              return s
+
+          # Download a public Russian city directory (city, region, federal district, population).
+          url = 'https://raw.githubusercontent.com/epogrebnyak/ru-cities/main/assets/towns.csv'
+          with urllib.request.urlopen(url, timeout=60) as r:
+              city_csv = r.read().decode('utf-8-sig')
+          rows = list(csv.DictReader(io.StringIO(city_csv)))
+          assert len(rows) >= 1000, len(rows)
+
+          city_names_all = {norm(r['city']) for r in rows if r.get('city')}
+
+          # Build the complete set of city names already present in SmartX.
+          existing_city_names = set()
+          existing_addresses = []
+          for ad in old_ads:
+              m = addr_pat.search(ad)
+              assert m
+              address = m.group(1).strip()
+              existing_addresses.append(address)
+              for seg in address.split(','):
+                  n = norm(seg)
+                  if n in city_names_all:
+                      existing_city_names.add(n)
+
+          # A few addresses use an administrative prefix in the city segment; cover those too.
+          for address in existing_addresses:
+              parts = [norm(x) for x in address.split(',')]
+              for n in parts[:3]:
+                  for pref in ('г.о. ', 'г. ', 'город '):
+                      if n.startswith(pref):
+                          n2 = norm(n[len(pref):])
+                          if n2 in city_names_all:
+                              existing_city_names.add(n2)
+
+          # Exclude Far East and North Caucasus, and exclude every city name already on SmartX.
+          candidates = []
+          seen_candidate_names = set()
+          for r in rows:
+              city = (r.get('city') or '').strip()
+              region = (r.get('region_name') or '').strip()
+              fd = (r.get('federal_district') or '').strip()
+              if not city or not region:
+                  continue
+              if fd in {'Дальневосточный', 'Северо-Кавказский'}:
+                  continue
+              n = norm(city)
+              if n in existing_city_names or n in seen_candidate_names:
+                  continue
+              try:
+                  pop = float(r.get('population') or 0)
+              except Exception:
+                  pop = 0.0
+              candidates.append((pop, city, region, fd))
+              seen_candidate_names.add(n)
+
+          candidates.sort(key=lambda x: (-x[0], x[2], x[1]))
+          chosen = candidates[:102]
+          assert len(chosen) == 102, len(chosen)
+          chosen_names = [norm(c[1]) for c in chosen]
+          assert not (set(chosen_names) & existing_city_names)
+          assert len(set(chosen_names)) == 102
+
+          # Identify exactly 99 SKU templates from the current feed.
+          def tag(ad, name):
+              m = re.search(fr'<{name}>(.*?)</{name}>', ad, re.S)
+              return m.group(1).strip() if m else ''
+
+          sku_templates = {}
+          for ad in old_ads:
+              key = (tag(ad,'Model'), tag(ad,'MemorySize'), tag(ad,'Color'))
+              if all(key) and key not in sku_templates:
+                  sku_templates[key] = ad
+          assert len(sku_templates) == 99, len(sku_templates)
+          sku_items = sorted(sku_templates.items(), key=lambda kv: kv[0])
+
+          old_combo = set()
+          for ad in old_ads:
+              address = addr_pat.search(ad).group(1).strip()
+              key = (address, tag(ad,'Model'), tag(ad,'MemorySize'), tag(ad,'Color'))
+              assert key not in old_combo, ('Existing duplicate', key)
+              old_combo.add(key)
+
+          new_ads = []
+          new_ids = []
+          new_combo = set()
+          city_counts = Counter()
+
+          # 101 full cities x 99 SKU = 9,999, plus 1 SKU in city 102 = exactly 10,000.
+          for city_idx, (pop, city, region, fd) in enumerate(chosen, start=1):
+              take = 99 if city_idx <= 101 else 1
+              address = f'{region}, {city}'
+              for sku_idx, (sku_key, template) in enumerate(sku_items[:take], start=1):
+                  new_id = f'smx50k_261026_{city_idx:03d}_{sku_idx:03d}'
+                  assert new_id not in old_ids
+                  ad = id_pat.sub(f'<Id>{new_id}</Id>', template, count=1)
+                  ad = addr_pat.sub(f'<Address>{address}</Address>', ad, count=1)
+                  assert len(img_pat.findall(ad)) == 6
+                  combo = (address, sku_key[0], sku_key[1], sku_key[2])
+                  assert combo not in old_combo and combo not in new_combo, combo
+                  new_combo.add(combo)
+                  new_ids.append(new_id)
+                  new_ads.append(ad)
+                  city_counts[(region, city)] += 1
+
+          assert len(new_ads) == 10000, len(new_ads)
+          assert len(set(new_ids)) == 10000
+          assert not (set(new_ids) & set(old_ids))
+          assert len(city_counts) == 102
+          assert sum(1 for c in city_counts.values() if c == 99) == 101
+          assert sum(1 for c in city_counts.values() if c == 1) == 1
+
+          # Reuse the exact XML wrapper from part 1.
+          src = texts[0]
+          first_ad = src.find('<Ad>')
+          last_end = src.rfind('</Ad>') + len('</Ad>')
+          prefix = src[:first_ad]
+          suffix = src[last_end:]
+          output = prefix + ''.join(new_ads) + suffix
+          out.write_text(output, encoding='utf-8')
+
+          # Final structural validation of the new part.
+          check = out.read_text(encoding='utf-8')
+          ads3 = ad_pat.findall(check)
+          assert len(ads3) == 10000
+          ids3 = [id_pat.search(a).group(1).strip() for a in ads3]
+          assert len(set(ids3)) == 10000
+          assert all(len(img_pat.findall(a)) == 6 for a in ads3)
+
+          lines = [
+              'SmartX expansion: 40,000 -> 50,000',
+              'New ads: 10,000',
+              'New city names: 102',
+              'Existing SmartX city-name overlap: 0',
+              'Excluded federal districts: Дальневосточный, Северо-Кавказский',
+              'Distribution: 101 cities x 99 SKU + 1 city x 1 SKU',
+              '',
+              'Selected cities:'
+          ]
+          for (pop, city, region, fd) in chosen:
+              lines.append(f'{region} | {city} | {fd} | ads={city_counts[(region,city)]} | population_thousands={pop:g}')
+          report.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          print('VALIDATION OK')
+          print('Existing ads preserved:', len(old_ads))
+          print('New ads:', len(new_ads))
+          print('Total after adding part 3:', len(old_ads) + len(new_ads))
+          print('Existing city-name overlap:', len(set(chosen_names) & existing_city_names))
+          print('New cities:', len(chosen))
+          print('New unique IDs:', len(set(new_ids)))
+          print('Images per new ad: 6')
+          print('New feed bytes:', out.stat().st_size)
+          print('--- CHOSEN CITIES ---')
+          for pop, city, region, fd in chosen:
+              print(f'{region} | {city} | {fd} | {city_counts[(region,city)]}')
+          PY
+
+      - name: Commit new 10000-ad feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/smartx-final-part-3-40001-50000.xml feeds/smartx-new-cities-40001-50000.txt
+          git commit -m "Expand SmartX to 50000 ads [skip ci]"
+          git push
