@@ -1,0 +1,149 @@
+name: Replace SmartX descriptions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/replace-smartx-description.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  replace-description:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Replace Description in all 40000 SmartX ads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import html
+          import re
+
+          feeds = [
+              Path('feeds/smartx-final-part-1-00001-20000.xml'),
+              Path('feeds/smartx-final-part-2-20001-40000.xml'),
+          ]
+
+          description = """📱 Новый оригинальный iPhone от SmartX по выгодной цене
+
+Ищете iPhone без переплат и с безопасной покупкой?
+В SmartX продаём новую оригинальную технику Apple с проверкой перед отправкой.
+
+✅ Почему покупают у нас:
+• Только оригинальная техника Apple
+• Новые устройства
+• Проверяем смартфон перед продажей
+• Выгодные цены без лишних переплат
+• Большой выбор моделей, памяти и цветов
+• Быстрая отправка по всей России
+• Возможен самовывоз в Москве
+
+🎁 Подарок к заказу
+При покупке можно получить чехол, защитное стекло или оригинальный блок питания Apple 20W.
+
+🚚 Безопасная покупка через Авито Доставку
+Вы оплачиваете товар через Авито. После поступления заказа в пункт выдачи можете осмотреть устройство перед получением. Продавец получает деньги только после завершения сделки.
+
+💳 Можно разделить оплату
+Для удобства доступна покупка с помощью Яндекс Сплит.
+
+🛡 Гарантия и сервис
+Если в течение 1 месяца будет выявлен заводской брак — предложим замену устройства или возврат денежных средств.
+Дополнительно предоставляем 1 год сервисного обслуживания.
+
+📦 Каждый заказ тщательно упаковываем, чтобы устройство приехало к вам в сохранности.
+
+🔥 Цена в объявлении актуальна.
+Наличие конкретного цвета и объёма памяти лучше уточнить перед заказом.
+
+💬 Напишите нам прямо сейчас
+Подскажем по модели, поможем выбрать цвет и память и быстро оформим отправку.
+
+SmartX — надёжная техника для ваших больших планов."""
+
+          encoded = html.escape(description, quote=False).replace('\n', '&lt;br&gt;')
+          pattern = re.compile(r'<Description>.*?</Description>', re.S)
+          replacement = f'<Description>{encoded}</Description>'
+
+          total_replaced = 0
+          for feed in feeds:
+              before = feed.read_text(encoding='utf-8')
+              before_skeleton = pattern.sub('<Description>__DESCRIPTION__</Description>', before)
+
+              after, count = pattern.subn(lambda _: replacement, before)
+              assert count == 20000, (feed.name, count)
+              assert after.count(replacement) == 20000, (feed.name, after.count(replacement))
+
+              after_skeleton = pattern.sub('<Description>__DESCRIPTION__</Description>', after)
+              assert before_skeleton == after_skeleton, f'Unexpected non-description change in {feed.name}'
+
+              feed.write_text(after, encoding='utf-8')
+              total_replaced += count
+              print(f'{feed.name}: replaced {count} descriptions')
+
+          assert total_replaced == 40000, total_replaced
+          print('DESCRIPTION REPLACEMENT OK')
+          print('Descriptions replaced:', total_replaced)
+          PY
+
+      - name: Validate SmartX feeds after description replacement
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          feeds = [
+              Path('feeds/smartx-final-part-1-00001-20000.xml'),
+              Path('feeds/smartx-final-part-2-20001-40000.xml'),
+          ]
+
+          all_ids = []
+          total_ads = 0
+          for feed in feeds:
+              text = feed.read_text(encoding='utf-8')
+              ads = re.findall('<Ad>.*?</Ad>', text, flags=re.S)
+              assert len(ads) == 20000, (feed.name, len(ads))
+              assert text.count('<Description>📱 Новый оригинальный iPhone от SmartX по выгодной цене') == 20000
+              total_ads += len(ads)
+
+              for ad in ads:
+                  m = re.search('<Id>(.*?)</Id>', ad, re.S)
+                  assert m
+                  all_ids.append(m.group(1).strip())
+                  images = re.findall('<Image url="([^"]+)"', ad)
+                  assert len(images) == 6, (m.group(1).strip(), len(images))
+
+          assert total_ads == 40000
+          assert len(all_ids) == 40000
+          assert len(set(all_ids)) == 40000
+          print('VALIDATION OK')
+          print('Ads:', total_ads)
+          print('Unique IDs:', len(set(all_ids)))
+          print('Descriptions:', 40000)
+          print('Images per ad: 6')
+          PY
+
+      - name: Commit updated descriptions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/smartx-final-part-1-00001-20000.xml \
+                  feeds/smartx-final-part-2-20001-40000.xml
+          if git diff --cached --quiet; then
+            echo 'Descriptions already match; nothing to commit.'
+            exit 0
+          fi
+          git commit -m "Update SmartX descriptions for all 40000 ads [skip ci]"
+          git push
