@@ -16,34 +16,104 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore SmartX XML files and photos
+      - name: Restore SmartX package
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/smartx-bundle
-
-          if [ -f bundles/SmartX_GitHub_PUBLISH_PAYLOAD.tar.gz ]; then
-            cp bundles/SmartX_GitHub_PUBLISH_PAYLOAD.tar.gz /tmp/smartx-bundle/payload.tar.gz
-          elif [ -f bundles/smartx-avito-payload.tar.gz ]; then
-            cp bundles/smartx-avito-payload.tar.gz /tmp/smartx-bundle/payload.tar.gz
-          else
-            shopt -s nullglob
-            parts=(bundles/smartx-avito-payload.tar.gz.part-*)
-            if [ ${#parts[@]} -eq 0 ]; then
-              echo "SmartX payload not found in bundles/"
-              exit 1
-            fi
-            cat "${parts[@]}" > /tmp/smartx-bundle/payload.tar.gz
+          shopt -s nullglob
+          parts=(bundles/smartx-autopublish.tar.xz.part-*)
+          if [ ${#parts[@]} -eq 0 ]; then
+            echo "SmartX package parts not found"
+            exit 1
           fi
+          cat "${parts[@]}" > /tmp/smartx-autopublish.tar.xz
+          xz -t /tmp/smartx-autopublish.tar.xz
+          rm -rf /tmp/smartx-autopublish
+          mkdir -p /tmp/smartx-autopublish
+          tar -xJf /tmp/smartx-autopublish.tar.xz -C /tmp/smartx-autopublish
 
-          tar -tzf /tmp/smartx-bundle/payload.tar.gz >/dev/null
-          tar -xzf /tmp/smartx-bundle/payload.tar.gz -C .
-          rm -rf bundles
+      - name: Publish XML and approved photos
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+
+          rm -f feeds/smartx-part-01.xml feeds/smartx-part-02.xml feeds/smartx-part-03.xml feeds/smartx-part-04.xml feeds/smartx-part-05.xml
+          rm -f feeds/smartx-final-part-1-00001-20000.xml feeds/smartx-final-part-2-20001-40000.xml
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml feeds/
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml feeds/
+
+          rm -rf photos/smartx
+          mkdir -p photos/smartx
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          src = Path('/tmp/smartx-autopublish/photos_webp')
+          dst = Path('photos/smartx')
+          files = sorted(src.glob('*.webp'))
+          if len(files) != 104:
+              raise SystemExit(f'Expected 104 photos, got {len(files)}')
+          for p in files:
+              with Image.open(p) as im:
+                  im = im.convert('RGB')
+                  im.save(dst / f'{p.stem}.jpg', 'JPEG', quality=92, optimize=True, progressive=True)
+          print(f'Published {len(files)} JPG photos')
+          PY
+
+      - name: Validate final SmartX feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+
+          feeds = [
+              Path('feeds/smartx-final-part-1-00001-20000.xml'),
+              Path('feeds/smartx-final-part-2-20001-40000.xml'),
+          ]
+          all_ids = []
+          total = 0
+          expected_prefix = 'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/photos/smartx/'
+          for feed in feeds:
+              root = ET.parse(feed).getroot()
+              ads = root.findall('Ad')
+              if len(ads) != 20000:
+                  raise SystemExit(f'{feed}: expected 20000 ads, got {len(ads)}')
+              total += len(ads)
+              for ad in ads:
+                  ad_id = (ad.findtext('Id') or '').strip()
+                  if not ad_id:
+                      raise SystemExit(f'{feed}: empty Id')
+                  all_ids.append(ad_id)
+                  images = ad.find('Images')
+                  image_nodes = [] if images is None else images.findall('Image')
+                  if len(image_nodes) != 6:
+                      raise SystemExit(f'{feed}: {ad_id} has {len(image_nodes)} images')
+                  for node in image_nodes:
+                      url = node.attrib.get('url', '')
+                      if not url.startswith(expected_prefix):
+                          raise SystemExit(f'{feed}: bad image URL for {ad_id}: {url}')
+                      name = url.rsplit('/', 1)[-1]
+                      if not (Path('photos/smartx') / name).exists():
+                          raise SystemExit(f'{feed}: missing local image {name}')
+          if total != 40000:
+              raise SystemExit(f'Expected 40000 ads, got {total}')
+          if len(set(all_ids)) != 40000:
+              raise SystemExit(f'Expected 40000 unique IDs, got {len(set(all_ids))}')
+          photos = list(Path('photos/smartx').glob('*.jpg'))
+          if len(photos) != 104:
+              raise SystemExit(f'Expected 104 JPG photos, got {len(photos)}')
+          print('VALIDATION OK: 40000 ads, 40000 unique IDs, 6 images each, 104 photos')
+          PY
 
       - name: Commit published feeds
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf bundles
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A feeds photos bundles
@@ -51,5 +121,5 @@ jobs:
             echo "Nothing to publish"
             exit 0
           fi
-          git commit -m "Publish SmartX Avito feeds and photos"
+          git commit -m "Publish final SmartX Avito feeds and photos [skip ci]"
           git push
