@@ -23,7 +23,7 @@ jobs:
           python -m pip install --quiet gdown
           rm -rf /tmp/smartx-final /tmp/smartx-final.tar.gz
           mkdir -p /tmp/smartx-final
-          gdown --fuzzy "https://drive.google.com/file/d/1FTAQsgpJgsWiQBd3POEz-TJcILniiY9F/view?usp=drivesdk" -O /tmp/smartx-final.tar.gz
+          gdown "1FTAQsgpJgsWiQBd3POEz-TJcILniiY9F" -O /tmp/smartx-final.tar.gz
           echo "Downloaded bytes: $(stat -c%s /tmp/smartx-final.tar.gz)"
           test "$(stat -c%s /tmp/smartx-final.tar.gz)" -gt 15000000
           tar -tzf /tmp/smartx-final.tar.gz >/dev/null
