@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - "bundles/**"
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,106 +19,108 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          parts=(bundles/smartx-autopublish.tar.xz.part-*)
-          if [ ${#parts[@]} -eq 0 ]; then
-            echo "SmartX package parts not found"
-            exit 1
-          fi
-          cat "${parts[@]}" > /tmp/smartx-autopublish.tar.xz
-          xz -t /tmp/smartx-autopublish.tar.xz
+          cat bundles/smartx-autopublish.tar.xz.part-* > /tmp/smartx-autopublish.tar.xz
           rm -rf /tmp/smartx-autopublish
           mkdir -p /tmp/smartx-autopublish
           tar -xJf /tmp/smartx-autopublish.tar.xz -C /tmp/smartx-autopublish
 
-      - name: Publish XML and approved photos
+      - name: Rebuild approved SmartX photos
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --quiet pillow
-
-          rm -f feeds/smartx-part-01.xml feeds/smartx-part-02.xml feeds/smartx-part-03.xml feeds/smartx-part-04.xml feeds/smartx-part-05.xml
-          rm -f feeds/smartx-final-part-1-00001-20000.xml feeds/smartx-final-part-2-20001-40000.xml
-          cp /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml feeds/
-          cp /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml feeds/
-
+          python -m pip install --quiet pillow pillow-avif-plugin
           rm -rf photos/smartx
           mkdir -p photos/smartx
           python - <<'PY'
+          import json
           from pathlib import Path
+          import pillow_avif  # noqa: F401
           from PIL import Image
 
-          src = Path('/tmp/smartx-autopublish/photos_webp')
-          dst = Path('photos/smartx')
-          files = sorted(src.glob('*.webp'))
-          if len(files) != 104:
-              raise SystemExit(f'Expected 104 photos, got {len(files)}')
-          for p in files:
-              with Image.open(p) as im:
-                  im = im.convert('RGB')
-                  im.save(dst / f'{p.stem}.jpg', 'JPEG', quality=92, optimize=True, progressive=True)
-          print(f'Published {len(files)} JPG photos')
+          src = Path('/tmp/smartx-autopublish')
+          atlas = Image.open(src / 'photos-atlas.avif').convert('RGB')
+          manifest = json.loads((src / 'atlas_manifest.json').read_text(encoding='utf-8'))
+          out = Path('photos/smartx')
+          out.mkdir(parents=True, exist_ok=True)
+
+          for item in manifest['items']:
+              x, y, w, h = (item['x'], item['y'], item['w'], item['h'])
+              crop = atlas.crop((x, y, x + w, y + h)).convert('RGB')
+              scale = max(1.0, 1200 / max(crop.size))
+              if scale > 1.0:
+                  new_size = (round(crop.width * scale), round(crop.height * scale))
+                  crop = crop.resize(new_size, Image.Resampling.LANCZOS)
+              crop.save(out / item['file'], 'JPEG', quality=92, optimize=True, progressive=True)
+          print('rebuilt', len(manifest['items']), 'photos')
           PY
 
-      - name: Validate final SmartX feed
+      - name: Install final XML feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f feeds/smartx-final-part-*.xml
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml feeds/
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml feeds/
+
+      - name: Validate SmartX package
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
           import re
-          import xml.etree.ElementTree as ET
+          from PIL import Image
 
           feeds = [
               Path('feeds/smartx-final-part-1-00001-20000.xml'),
               Path('feeds/smartx-final-part-2-20001-40000.xml'),
           ]
-          all_ids = []
-          total = 0
           expected_prefix = 'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/photos/smartx/'
-          for feed in feeds:
-              root = ET.parse(feed).getroot()
-              ads = root.findall('Ad')
-              if len(ads) != 20000:
-                  raise SystemExit(f'{feed}: expected 20000 ads, got {len(ads)}')
-              total += len(ads)
+          all_ids = []
+          total_ads = 0
+          for idx, path in enumerate(feeds, 1):
+              text = path.read_text(encoding='utf-8')
+              ads = re.findall(r'<Ad\b[\s\S]*?</Ad>', text)
+              assert len(ads) == 20000, (path, len(ads))
+              total_ads += len(ads)
               for ad in ads:
-                  ad_id = (ad.findtext('Id') or '').strip()
-                  if not ad_id:
-                      raise SystemExit(f'{feed}: empty Id')
-                  all_ids.append(ad_id)
-                  images = ad.find('Images')
-                  image_nodes = [] if images is None else images.findall('Image')
-                  if len(image_nodes) != 6:
-                      raise SystemExit(f'{feed}: {ad_id} has {len(image_nodes)} images')
-                  for node in image_nodes:
-                      url = node.attrib.get('url', '')
-                      if not url.startswith(expected_prefix):
-                          raise SystemExit(f'{feed}: bad image URL for {ad_id}: {url}')
-                      name = url.rsplit('/', 1)[-1]
-                      if not (Path('photos/smartx') / name).exists():
-                          raise SystemExit(f'{feed}: missing local image {name}')
-          if total != 40000:
-              raise SystemExit(f'Expected 40000 ads, got {total}')
-          if len(set(all_ids)) != 40000:
-              raise SystemExit(f'Expected 40000 unique IDs, got {len(set(all_ids))}')
-          photos = list(Path('photos/smartx').glob('*.jpg'))
-          if len(photos) != 104:
-              raise SystemExit(f'Expected 104 JPG photos, got {len(photos)}')
-          print('VALIDATION OK: 40000 ads, 40000 unique IDs, 6 images each, 104 photos')
+                  m = re.search(r'<Id>(.*?)</Id>', ad, re.S)
+                  assert m, 'Missing Id'
+                  all_ids.append(m.group(1).strip())
+                  urls = re.findall(r'<Image\s+url="([^"]+)"\s*/?>', ad)
+                  assert len(urls) == 6, (m.group(1), len(urls))
+                  assert all(u.startswith(expected_prefix) for u in urls), m.group(1)
+
+          assert total_ads == 40000, total_ads
+          assert len(set(all_ids)) == 40000, (len(all_ids), len(set(all_ids)))
+
+          photos = sorted(Path('photos/smartx').glob('*.jpg'))
+          assert len(photos) == 104, len(photos)
+          for p in photos:
+              with Image.open(p) as im:
+                  assert max(im.size) >= 1200, (p.name, im.size)
+                  assert min(im.size) >= 600, (p.name, im.size)
+
+          referenced = set()
+          for path in feeds:
+              text = path.read_text(encoding='utf-8')
+              referenced.update(re.findall(r'photos/smartx/([^"<]+\.jpg)', text))
+          actual = {p.name for p in photos}
+          assert referenced == actual, (len(referenced), len(actual), referenced - actual, actual - referenced)
+          print('VALIDATION OK: 40000 ads, 40000 unique IDs, 104 photos, 6 images/ad')
           PY
 
-      - name: Commit published feeds
+      - name: Commit published SmartX feeds
         shell: bash
         run: |
           set -euo pipefail
           rm -rf bundles
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A feeds photos bundles
+          git add feeds photos bundles
           if git diff --cached --quiet; then
             echo "Nothing to publish"
             exit 0
           fi
-          git commit -m "Publish final SmartX Avito feeds and photos [skip ci]"
+          git commit -m "Publish final SmartX 40000 feed [skip ci]"
           git push
