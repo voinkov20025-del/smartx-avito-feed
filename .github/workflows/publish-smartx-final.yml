@@ -1,0 +1,164 @@
+name: Publish SmartX final 40000
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-smartx-final.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore package from Git blobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/smartx-parts /tmp/smartx-autopublish
+          SHAS=(
+            439a57888097b6d5acb71861c0901f0775dd44fa
+            d7245ec3e941247d56d7804bfa44a5ac7f25b1d3
+            a5f5d6395ada23c2ecdba9ff40b8082457eaa844
+            1f80c6a30b9809dc1a8422962745d9901f25cbd2
+            d7ec4ac6b600ec60543323925eb5188b5ea29f36
+            381eaf635df326efde1847725c66bfbd389e77c6
+            ec731a6411aefe4cfbb73941a3539b099a9f02ba
+            a87b9e76f3232d34ae626ed0e5bb76a1f9709898
+          )
+          for i in "${!SHAS[@]}"; do
+            sha="${SHAS[$i]}"
+            printf -v part '%03d' "$i"
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs/${sha}" \
+              | python -c 'import sys,json,base64; d=json.load(sys.stdin); sys.stdout.buffer.write(base64.b64decode(d["content"]))' \
+              > "/tmp/smartx-parts/part-${part}"
+          done
+          cat /tmp/smartx-parts/part-* > /tmp/smartx-autopublish.tar.xz
+          test "$(stat -c%s /tmp/smartx-autopublish.tar.xz)" = "844352"
+          tar -tJf /tmp/smartx-autopublish.tar.xz >/dev/null
+          tar -xJf /tmp/smartx-autopublish.tar.xz -C /tmp/smartx-autopublish
+          test -f /tmp/smartx-autopublish/photos-atlas.avif
+          test -f /tmp/smartx-autopublish/atlas_manifest.json
+          test -f /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml
+          test -f /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml
+
+      - name: Rebuild 104 approved SmartX photos
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow pillow-avif-plugin
+          rm -rf photos/smartx
+          mkdir -p photos/smartx
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pillow_avif  # noqa: F401
+          from PIL import Image
+
+          src = Path('/tmp/smartx-autopublish')
+          atlas = Image.open(src / 'photos-atlas.avif').convert('RGB')
+          manifest = json.loads((src / 'atlas_manifest.json').read_text(encoding='utf-8'))
+          assert len(manifest['items']) == 104, len(manifest['items'])
+          out = Path('photos/smartx')
+
+          for item in manifest['items']:
+              x, y, w, h = item['x'], item['y'], item['w'], item['h']
+              crop = atlas.crop((x, y, x + w, y + h)).convert('RGB')
+              scale = max(1.0, 1200 / max(crop.size))
+              if scale > 1.0:
+                  crop = crop.resize(
+                      (round(crop.width * scale), round(crop.height * scale)),
+                      Image.Resampling.LANCZOS,
+                  )
+              crop.save(out / item['file'], 'JPEG', quality=92, optimize=True, progressive=True)
+          print(f'Rebuilt {len(manifest["items"])} SmartX photos')
+          PY
+
+      - name: Install final XML feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p feeds
+          rm -f feeds/smartx-final-part-*.xml
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml feeds/
+          cp /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml feeds/
+
+      - name: Validate final SmartX feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          from PIL import Image
+
+          feeds = [
+              Path('feeds/smartx-final-part-1-00001-20000.xml'),
+              Path('feeds/smartx-final-part-2-20001-40000.xml'),
+          ]
+          prefix = 'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/photos/smartx/'
+          all_ids = []
+          referenced = set()
+          total = 0
+
+          for feed in feeds:
+              text = feed.read_text(encoding='utf-8')
+              ads = re.findall(r'<Ad\b[\s\S]*?</Ad>', text)
+              assert len(ads) == 20000, (feed.name, len(ads))
+              total += len(ads)
+              for ad in ads:
+                  m = re.search(r'<Id>(.*?)</Id>', ad, re.S)
+                  assert m, 'Missing Id'
+                  ad_id = m.group(1).strip()
+                  all_ids.append(ad_id)
+                  urls = re.findall(r'<Image\s+url="([^"]+)"\s*/?>', ad)
+                  assert len(urls) == 6, (ad_id, len(urls))
+                  assert all(url.startswith(prefix) for url in urls), ad_id
+                  referenced.update(url.rsplit('/', 1)[-1] for url in urls)
+
+          assert total == 40000, total
+          assert len(all_ids) == 40000
+          assert len(set(all_ids)) == 40000, 'IDs are not unique'
+
+          photos = sorted(Path('photos/smartx').glob('*.jpg'))
+          assert len(photos) == 104, len(photos)
+          actual = {p.name for p in photos}
+          assert referenced == actual, (len(referenced), len(actual), referenced - actual, actual - referenced)
+
+          for photo in photos:
+              with Image.open(photo) as im:
+                  assert max(im.size) >= 1200, (photo.name, im.size)
+                  assert min(im.size) >= 600, (photo.name, im.size)
+
+          print('VALIDATION OK')
+          print('Ads:', total)
+          print('Unique IDs:', len(set(all_ids)))
+          print('Photos:', len(photos))
+          print('Images per ad: 6')
+          PY
+
+      - name: Commit and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/smartx-final-part-1-00001-20000.xml \
+                  feeds/smartx-final-part-2-20001-40000.xml \
+                  photos/smartx
+          if git diff --cached --quiet; then
+            echo 'Final SmartX files already match; nothing to commit.'
+            exit 0
+          fi
+          git commit -m "Publish final SmartX 40000 feed [skip ci]"
+          git push
