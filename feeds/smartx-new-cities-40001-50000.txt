@@ -1,0 +1,110 @@
+SmartX expansion: 40,000 -> 50,000
+New ads: 10,000
+New city names: 102
+Existing SmartX city-name overlap: 0
+Excluded federal districts: Дальневосточный, Северо-Кавказский
+Distribution: 101 cities x 99 SKU + 1 city x 1 SKU
+
+Selected cities:
+Тамбовская область | Тамбов | Центральный | ads=99 | population_thousands=292.1
+Красноярский край | Норильск | Сибирский | ads=99 | population_thousands=181.8
+Республика Крым | Керчь | Южный | ads=99 | population_thousands=151.5
+Республика Крым | Евпатория | Южный | ads=99 | population_thousands=108.2
+Ростовская область | Новошахтинск | Южный | ads=99 | population_thousands=106.6
+Республика Калмыкия | Элиста | Южный | ads=99 | population_thousands=103.1
+Свердловская область | Серов | Уральский | ads=99 | population_thousands=95.9
+Оренбургская область | Новотроицк | Приволжский | ads=99 | population_thousands=83.7
+Пермский край | Чайковский | Приволжский | ads=99 | population_thousands=82.4
+Московская область | Ивантеевка | Центральный | ads=99 | population_thousands=81.3
+Ростовская область | Азов | Южный | ads=99 | population_thousands=80.4
+Свердловская область | Новоуральск | Уральский | ads=99 | population_thousands=80.4
+Республика Крым | Ялта | Южный | ads=99 | population_thousands=79
+Иркутская область | Усолье-Сибирское | Сибирский | ads=99 | population_thousands=76
+Республика Хакасия | Черногорск | Сибирский | ads=99 | population_thousands=75.4
+Курганская область | Шадринск | Уральский | ads=99 | population_thousands=74.7
+Алтайский край | Новоалтайск | Сибирский | ads=99 | population_thousands=74.6
+Челябинская область | Троицк | Уральский | ads=99 | population_thousands=73.4
+Свердловская область | Верхняя Пышма | Уральский | ads=99 | population_thousands=72.7
+Кировская область | Кирово-Чепецк | Приволжский | ads=99 | population_thousands=69.8
+Республика Крым | Феодосия | Южный | ads=99 | population_thousands=68
+Краснодарский край | Славянск-на-Кубани | Южный | ads=99 | population_thousands=67.9
+Ленинградская область | Мурино | Северо-Западный | ads=99 | population_thousands=64.9
+Пермский край | Кунгур | Приволжский | ads=99 | population_thousands=64.9
+Тюменская область | Ишим | Уральский | ads=99 | population_thousands=64.4
+Ростовская область | Гуково | Южный | ads=99 | population_thousands=63.2
+Свердловская область | Асбест | Уральский | ads=99 | population_thousands=62.9
+Архангельская область | Котлас | Северо-Западный | ads=99 | population_thousands=62
+Свердловская область | Ревда | Уральский | ads=99 | population_thousands=61.5
+Свердловская область | Полевской | Уральский | ads=99 | population_thousands=61
+Республика Башкортостан | Сибай | Приволжский | ads=99 | population_thousands=60.8
+Пермский край | Лысьва | Приволжский | ads=99 | population_thousands=60.3
+Республика Татарстан | Чистополь | Приволжский | ads=99 | population_thousands=59.4
+Республика Башкортостан | Белебей | Приволжский | ads=99 | population_thousands=59.2
+Тюменская область | Нягань | Уральский | ads=99 | population_thousands=58.6
+Краснодарский край | Крымск | Южный | ads=99 | population_thousands=57.9
+Волгоградская область | Михайловка | Южный | ads=99 | population_thousands=57.4
+Краснодарский край | Тихорецк | Южный | ads=99 | population_thousands=57.1
+Тульская область | Щекино | Центральный | ads=99 | population_thousands=57.1
+Ростовская область | Сальск | Южный | ads=99 | population_thousands=56.8
+Республика Башкортостан | Мелеуз | Приволжский | ads=99 | population_thousands=56.7
+Ленинградская область | Сертолово | Северо-Западный | ads=99 | population_thousands=56.6
+Московская область | Дзержинский | Центральный | ads=99 | population_thousands=56.4
+Свердловская область | Краснотурьинск | Уральский | ads=99 | population_thousands=56.3
+Мурманская область | Североморск | Северо-Западный | ads=99 | population_thousands=53.6
+Пермский край | Краснокамск | Приволжский | ads=99 | population_thousands=52.5
+Челябинская область | Снежинск | Уральский | ads=99 | population_thousands=51.8
+Краснодарский край | Белореченск | Южный | ads=99 | population_thousands=51.6
+Тюменская область | Салехард | Уральский | ads=99 | population_thousands=51
+Краснодарский край | Тимашевск | Южный | ads=99 | population_thousands=50.8
+Московская область | Солнечногорск | Центральный | ads=99 | population_thousands=50.2
+Иркутская область | Черемхово | Сибирский | ads=99 | population_thousands=50.1
+Тульская область | Узловая | Центральный | ads=99 | population_thousands=49.7
+Свердловская область | Лесной | Уральский | ads=99 | population_thousands=49.3
+Московская область | Котельники | Центральный | ads=99 | population_thousands=49
+Удмуртская Республика | Можга | Приволжский | ads=99 | population_thousands=49
+Оренбургская область | Бугуруслан | Приволжский | ads=99 | population_thousands=48.5
+Иркутская область | Шелехов | Сибирский | ads=99 | population_thousands=48.4
+Краснодарский край | Курганинск | Южный | ads=99 | population_thousands=48.2
+Самарская область | Отрадный | Приволжский | ads=99 | population_thousands=47.1
+Ростовская область | Донецк | Южный | ads=99 | population_thousands=46.7
+Республика Башкортостан | Бирск | Приволжский | ads=99 | population_thousands=46.5
+Республика Хакасия | Саяногорск | Сибирский | ads=99 | population_thousands=46
+Ростовская область | Аксай | Южный | ads=99 | population_thousands=46
+Алтайский край | Заринск | Сибирский | ads=99 | population_thousands=45.9
+Кемеровская область - Кузбасс | Березовский | Сибирский | ads=99 | population_thousands=45.6
+Тюменская область | Лангепас | Уральский | ads=99 | population_thousands=44.6
+Пермский край | Чусовой | Приволжский | ads=99 | population_thousands=43.7
+Краснодарский край | Кореновск | Южный | ads=99 | population_thousands=42.4
+Владимирская область | Кольчугино | Центральный | ads=99 | population_thousands=42
+Кемеровская область - Кузбасс | Осинники | Сибирский | ads=99 | population_thousands=41.7
+Краснодарский край | Темрюк | Южный | ads=99 | population_thousands=41.4
+Челябинская область | Сатка | Уральский | ads=99 | population_thousands=41.3
+Челябинская область | Чебаркуль | Уральский | ads=99 | population_thousands=41.3
+Мурманская область | Мончегорск | Северо-Западный | ads=99 | population_thousands=41.2
+Свердловская область | Верхняя Салда | Уральский | ads=99 | population_thousands=41.2
+Тюменская область | Лянтор | Уральский | ads=99 | population_thousands=41.2
+Ленинградская область | Кудрово | Северо-Западный | ads=99 | population_thousands=41.1
+Смоленская область | Сафоново | Центральный | ads=99 | population_thousands=41.1
+Иркутская область | Усть-Кут | Сибирский | ads=99 | population_thousands=40.8
+Кемеровская область - Кузбасс | Мыски | Сибирский | ads=99 | population_thousands=40.8
+Томская область | Стрежевой | Сибирский | ads=99 | population_thousands=40.8
+Саратовская область | Пугачев | Приволжский | ads=99 | population_thousands=40.6
+Алтайский край | Камень-на-Оби | Сибирский | ads=99 | population_thousands=40.5
+Тюменская область | Урай | Уральский | ads=99 | population_thousands=40.5
+Иркутская область | Тулун | Сибирский | ads=99 | population_thousands=39.7
+Республика Татарстан | Заинск | Приволжский | ads=99 | population_thousands=39.6
+Тюменская область | Пыть-Ях | Уральский | ads=99 | population_thousands=39.6
+Краснодарский край | Апшеронск | Южный | ads=99 | population_thousands=39.5
+Краснодарский край | Усть-Лабинск | Южный | ads=99 | population_thousands=39.5
+Ростовская область | Белая Калитва | Южный | ads=99 | population_thousands=39.3
+Калининградская область | Советск | Северо-Западный | ads=99 | population_thousands=39
+Иркутская область | Саянск | Сибирский | ads=99 | population_thousands=38.8
+Саратовская область | Ртищево | Приволжский | ads=99 | population_thousands=38.4
+Республика Коми | Печора | Северо-Западный | ads=99 | population_thousands=38.2
+Свердловская область | Качканар | Уральский | ads=99 | population_thousands=38.1
+Республика Крым | Джанкой | Южный | ads=99 | population_thousands=38
+Тамбовская область | Моршанск | Центральный | ads=99 | population_thousands=38
+Кемеровская область - Кузбасс | Мариинск | Сибирский | ads=99 | population_thousands=37.9
+Республика Башкортостан | Учалы | Приволжский | ads=99 | population_thousands=37.9
+Белгородская область | Алексеевка | Центральный | ads=99 | population_thousands=37.8
+Архангельская область | Новодвинск | Северо-Западный | ads=1 | population_thousands=37.7
