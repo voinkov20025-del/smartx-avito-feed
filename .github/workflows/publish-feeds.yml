@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "bundles/**"
+      - "bundles/READY"
 
 permissions:
   contents: write
@@ -19,10 +19,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat bundles/smartx-autopublish.tar.xz.part-* > /tmp/smartx-autopublish.tar.xz
+          cat bundles/smartx-min2.b64.part-* > /tmp/smartx-min2.b64
+          echo "8002409c94c62587968a50b601a02e96fe5791dfef1d32c958274e416d3837d9  /tmp/smartx-min2.b64" | sha256sum -c -
+          base64 -d /tmp/smartx-min2.b64 > /tmp/smartx-min2.tar.xz
+          echo "23b76cdc8ff17d314bc465a1dee278f4edbf0758f2e7a5f6191c15e73032291f  /tmp/smartx-min2.tar.xz" | sha256sum -c -
           rm -rf /tmp/smartx-autopublish
           mkdir -p /tmp/smartx-autopublish
-          tar -xJf /tmp/smartx-autopublish.tar.xz -C /tmp/smartx-autopublish
+          tar -xJf /tmp/smartx-min2.tar.xz -C /tmp/smartx-autopublish
+          xz -d /tmp/smartx-autopublish/feeds/smartx-final-part-1-00001-20000.xml.xz
+          xz -d /tmp/smartx-autopublish/feeds/smartx-final-part-2-20001-40000.xml.xz
 
       - name: Rebuild approved SmartX photos
         shell: bash
@@ -78,7 +83,7 @@ jobs:
           expected_prefix = 'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/photos/smartx/'
           all_ids = []
           total_ads = 0
-          for idx, path in enumerate(feeds, 1):
+          for path in feeds:
               text = path.read_text(encoding='utf-8')
               ads = re.findall(r'<Ad\b[\s\S]*?</Ad>', text)
               assert len(ads) == 20000, (path, len(ads))
