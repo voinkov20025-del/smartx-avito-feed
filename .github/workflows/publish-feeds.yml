@@ -22,7 +22,9 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/smartx-bundle
 
-          if [ -f bundles/smartx-avito-payload.tar.gz ]; then
+          if [ -f bundles/SmartX_GitHub_PUBLISH_PAYLOAD.tar.gz ]; then
+            cp bundles/SmartX_GitHub_PUBLISH_PAYLOAD.tar.gz /tmp/smartx-bundle/payload.tar.gz
+          elif [ -f bundles/smartx-avito-payload.tar.gz ]; then
             cp bundles/smartx-avito-payload.tar.gz /tmp/smartx-bundle/payload.tar.gz
           else
             shopt -s nullglob
