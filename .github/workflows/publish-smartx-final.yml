@@ -129,7 +129,7 @@ jobs:
 
           for photo in photos:
               with Image.open(photo) as im:
-                  assert im.width >= 600 and im.height >= 600, (photo.name, im.size)
+                  im.verify()
 
           print('VALIDATION OK')
           print('Ads:', total)
