@@ -1,0 +1,126 @@
+name: Refresh SmartX 881 blocked IDs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/refresh-smartx-881-ids.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-ids:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Replace 881 blocked IDs with new unique IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PYCODE'
+          from pathlib import Path
+          import base64, gzip, re
+
+          encoded_mapping = "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"
+          raw = gzip.decompress(base64.b64decode(encoded_mapping)).decode('utf-8')
+          pairs = [line.split('\t', 1) for line in raw.splitlines() if line.strip()]
+          assert len(pairs) == 881, len(pairs)
+          old_to_new = dict(pairs)
+          assert len(old_to_new) == 881
+          assert len(set(old_to_new.values())) == 881
+          assert all(k != v for k, v in old_to_new.items())
+
+          feeds = [
+              Path('feeds/smartx-final-part-1-00001-20000.xml'),
+              Path('feeds/smartx-final-part-2-20001-40000.xml'),
+          ]
+          ad_pat = re.compile(r'<Ad>.*?</Ad>', re.S)
+          id_pat = re.compile(r'<Id>(.*?)</Id>', re.S)
+          img_pat = re.compile(r'<Image url="[^"]+"')
+
+          before_texts = {}
+          all_before = []
+          for feed in feeds:
+              text = feed.read_text(encoding='utf-8')
+              before_texts[feed] = text
+              ads = ad_pat.findall(text)
+              assert len(ads) == 20000, (feed.name, len(ads))
+              ids = [id_pat.search(ad).group(1).strip() for ad in ads]
+              all_before.extend(ids)
+              for ad in ads:
+                  assert len(img_pat.findall(ad)) == 6
+
+          assert len(all_before) == 40000
+          assert len(set(all_before)) == 40000, 'IDs before replacement are not unique'
+          before_set = set(all_before)
+          missing_old = [x for x in old_to_new if x not in before_set]
+          existing_new = [x for x in old_to_new.values() if x in before_set]
+          assert not missing_old, ('Old IDs missing from current feed', missing_old[:10], len(missing_old))
+          assert not existing_new, ('New IDs already exist', existing_new[:10], len(existing_new))
+
+          replaced_total = 0
+          for feed in feeds:
+              before = before_texts[feed]
+              before_skeleton = id_pat.sub('<Id>__ID__</Id>', before)
+
+              def repl(m):
+                  old = m.group(1).strip()
+                  if old in old_to_new:
+                      return '<Id>' + old_to_new[old] + '</Id>'
+                  return m.group(0)
+
+              after = id_pat.sub(repl, before)
+              replaced_here = sum(before.count('<Id>' + old + '</Id>') for old in old_to_new)
+              replaced_total += replaced_here
+
+              after_skeleton = id_pat.sub('<Id>__ID__</Id>', after)
+              assert before_skeleton == after_skeleton, 'A non-ID field changed in ' + feed.name
+              feed.write_text(after, encoding='utf-8')
+              print(feed.name + ': refreshed ' + str(replaced_here) + ' IDs')
+
+          assert replaced_total == 881, replaced_total
+
+          all_after = []
+          for feed in feeds:
+              text = feed.read_text(encoding='utf-8')
+              ads = ad_pat.findall(text)
+              assert len(ads) == 20000
+              for ad in ads:
+                  m = id_pat.search(ad)
+                  assert m
+                  all_after.append(m.group(1).strip())
+                  assert len(img_pat.findall(ad)) == 6
+
+          assert len(all_after) == 40000
+          assert len(set(all_after)) == 40000, 'IDs after replacement are not unique'
+          after_set = set(all_after)
+          assert not (set(old_to_new) & after_set), 'Some old blocked IDs remain'
+          assert set(old_to_new.values()).issubset(after_set), 'Some new IDs are missing'
+
+          print('VALIDATION OK')
+          print('Ads:', len(all_after))
+          print('Unique IDs:', len(set(all_after)))
+          print('Old blocked IDs removed:', 881)
+          print('New IDs added:', 881)
+          print('Images per ad: 6')
+          PYCODE
+
+      - name: Commit refreshed SmartX IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/smartx-final-part-1-00001-20000.xml \
+                  feeds/smartx-final-part-2-20001-40000.xml
+          if git diff --cached --quiet; then
+            echo 'No feed changes to commit.'
+            exit 0
+          fi
+          git commit -m "Refresh 881 blocked SmartX IDs [skip ci]"
+          git push
