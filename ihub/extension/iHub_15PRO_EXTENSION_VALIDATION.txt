@@ -1,0 +1,14 @@
+STATUS: PASS
+Existing ads unchanged: 40020
+New ads: 13920
+Total ads after extension: 53940
+Existing SKU: 69
+New SKU: 24
+Total SKU: 93
+Cities/addresses used for new SKU: 580
+Images per new ad: exactly 6
+New approved first-image files: 24
+New IDs unique and non-colliding: PASS
+PART1 SHA256 unchanged: b4c73af550d77557a031788f09b93780ec8806d6badc1d41c7dbbb703f901570
+PART2 SHA256 unchanged: 0f69aa4e3ca95dbab3551dbb5b4b6de5801dd0d16515cd99bf8ef105fb3946cd
+PART3 SHA256: 8d86f0e182333e8fc947ccc041728a3f25812473896f37adf77679db444eec1d

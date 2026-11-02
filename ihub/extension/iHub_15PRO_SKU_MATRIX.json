@@ -1,0 +1,170 @@
+[
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "128 ГБ",
+    "color": "черный",
+    "price": 57990,
+    "cover": "iphone-15-pro-128-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "128 ГБ",
+    "color": "синий",
+    "price": 57990,
+    "cover": "iphone-15-pro-128-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "128 ГБ",
+    "color": "серый",
+    "price": 57990,
+    "cover": "iphone-15-pro-128-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "128 ГБ",
+    "color": "белый",
+    "price": 57990,
+    "cover": "iphone-15-pro-128-white-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "256 ГБ",
+    "color": "черный",
+    "price": 59990,
+    "cover": "iphone-15-pro-256-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "256 ГБ",
+    "color": "синий",
+    "price": 59990,
+    "cover": "iphone-15-pro-256-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "256 ГБ",
+    "color": "серый",
+    "price": 59990,
+    "cover": "iphone-15-pro-256-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "256 ГБ",
+    "color": "белый",
+    "price": 59990,
+    "cover": "iphone-15-pro-256-white-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "512 ГБ",
+    "color": "черный",
+    "price": 63990,
+    "cover": "iphone-15-pro-512-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "512 ГБ",
+    "color": "синий",
+    "price": 63990,
+    "cover": "iphone-15-pro-512-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "512 ГБ",
+    "color": "серый",
+    "price": 63990,
+    "cover": "iphone-15-pro-512-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro",
+    "memory": "512 ГБ",
+    "color": "белый",
+    "price": 63990,
+    "cover": "iphone-15-pro-512-white-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "256 ГБ",
+    "color": "черный",
+    "price": 67990,
+    "cover": "iphone-15-pro-max-256-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "256 ГБ",
+    "color": "синий",
+    "price": 67990,
+    "cover": "iphone-15-pro-max-256-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "256 ГБ",
+    "color": "серый",
+    "price": 67990,
+    "cover": "iphone-15-pro-max-256-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "256 ГБ",
+    "color": "белый",
+    "price": 67990,
+    "cover": "iphone-15-pro-max-256-white-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "512 ГБ",
+    "color": "черный",
+    "price": 73490,
+    "cover": "iphone-15-pro-max-512-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "512 ГБ",
+    "color": "синий",
+    "price": 73490,
+    "cover": "iphone-15-pro-max-512-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "512 ГБ",
+    "color": "серый",
+    "price": 73490,
+    "cover": "iphone-15-pro-max-512-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "512 ГБ",
+    "color": "белый",
+    "price": 73490,
+    "cover": "iphone-15-pro-max-512-white-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "1 ТБ",
+    "color": "черный",
+    "price": 76990,
+    "cover": "iphone-15-pro-max-1tb-black-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "1 ТБ",
+    "color": "синий",
+    "price": 76990,
+    "cover": "iphone-15-pro-max-1tb-blue-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "1 ТБ",
+    "color": "серый",
+    "price": 76990,
+    "cover": "iphone-15-pro-max-1tb-gray-01-cover.jpg"
+  },
+  {
+    "model": "iPhone 15 Pro Max",
+    "memory": "1 ТБ",
+    "color": "белый",
+    "price": 76990,
+    "cover": "iphone-15-pro-max-1tb-white-01-cover.jpg"
+  }
+]
