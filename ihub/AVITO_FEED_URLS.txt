@@ -6,16 +6,23 @@ https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/f
 PART 2 (20,010 ads):
 https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_40020_URL_FINAL_PART_2_20011-40020.xml
 
-Images manifest:
+PART 3 — iPhone 15 Pro / 15 Pro Max (13,920 ads):
+https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/iHub_STRUCTURE_13920_URL_FINAL_PART_3_40021-53940.xml
+
+Original images manifest (69 SKU + 5 universal cards):
 https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/iHub_PUBLIC_PHOTO_URLS.json
 
-Validation:
+15 Pro / 15 Pro Max SKU matrix:
+https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/extension/iHub_15PRO_SKU_MATRIX.json
+
+Final validation:
 STATUS: PASS
-Total ads: 40,020
-Parts: 20,010 + 20,010
-Unique IDs: 40,020
+Total ads: 53,940
+Parts: 20,010 + 20,010 + 13,920
+Total SKU: 93
+Existing SKU: 69
+New SKU: 24
+Cities/addresses: 580
 Images per ad: exactly 6
-Unique SKU covers: 69
-Unique public image URLs: 74
-Only Images changed relative to the two source XML files.
-GitHub Actions independently confirmed public HTTPS access to all 74 images and both XML feeds.
+Existing PART 1 and PART 2 were not modified when adding PART 3.
+GitHub Actions independently confirmed public HTTPS access to all 24 new SKU cover URLs and PART 3 XML.
