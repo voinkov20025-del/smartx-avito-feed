@@ -1,0 +1,28 @@
+name: Inspect existing iHub extension cover sources
+
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-ihub-old-covers.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect current source covers
+        run: |
+          mkdir -p /tmp/covers
+          cp photos/iphone15pro_black_01.jpg /tmp/covers/pro-black.jpg
+          cp photos/iphone15pro_blue_01.jpg /tmp/covers/pro-blue.jpg
+          cp photos/iphone15pro_gray_01.jpg /tmp/covers/pro-gray.jpg
+          cp photos/iphone15pro_white_01.jpg /tmp/covers/pro-white.jpg
+          cp photos/iphone15promax_black_01.jpg /tmp/covers/promax-black.jpg
+          cp photos/iphone15promax_blue_01.jpg /tmp/covers/promax-blue.jpg
+          cp photos/iphone15promax_gray_01.jpg /tmp/covers/promax-gray.jpg
+          cp photos/iphone15promax_white_01.jpg /tmp/covers/promax-white.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-cover-sources
+          path: /tmp/covers
+          retention-days: 1
