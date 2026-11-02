@@ -1,0 +1,20 @@
+STATUS: PASS
+Total ads: 40000
+Ads changed this run: 25168
+Requested target ads: 25168
+Interpretation: iPhone 15 Pro 156 -> 256 GB
+iPhone 13 Pro | 256 ГБ | 38490 RUB | ads=2060
+iPhone 14 | 128 ГБ | 31990 RUB | ads=1648
+iPhone 14 | 256 ГБ | 33490 RUB | ads=1648
+iPhone 14 Pro | 128 ГБ | 43490 RUB | ads=1648
+iPhone 14 Pro | 256 ГБ | 46990 RUB | ads=1648
+iPhone 14 Pro | 512 ГБ | 49990 RUB | ads=1648
+iPhone 15 | 128 ГБ | 39990 RUB | ads=1652
+iPhone 15 | 256 ГБ | 43990 RUB | ads=1652
+iPhone 15 Pro | 128 ГБ | 52990 RUB | ads=1652
+iPhone 15 Pro | 256 ГБ | 55490 RUB | ads=1652
+iPhone 15 Pro | 512 ГБ | 58990 RUB | ads=1652
+iPhone 15 Pro | 1 ТБ | 62990 RUB | ads=1652
+iPhone 15 Pro Max | 256 ГБ | 62990 RUB | ads=1652
+iPhone 15 Pro Max | 512 ГБ | 67990 RUB | ads=1652
+iPhone 15 Pro Max | 1 ТБ | 69990 RUB | ads=1652
