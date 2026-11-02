@@ -1,0 +1,11 @@
+STATUS: PASS
+Total ads: 40000
+Part 1: 20000
+Part 2: 20000
+Unique IDs: 40000
+SKU: 97
+Selected cities: 413
+Full cities: 412
+Partial city: 1 (36 ads)
+Images per ad: exactly 6
+New approved covers: 28
