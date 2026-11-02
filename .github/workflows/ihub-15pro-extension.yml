@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'ihub/extension/RUN_20261102'
+      - '.github/workflows/ihub-15pro-extension.yml'
 
 permissions:
   contents: write
@@ -42,8 +43,12 @@ jobs:
           git config user.name 'iHub feed publisher'
           git config user.email 'actions@users.noreply.github.com'
           git add ihub/feeds/iHub_STRUCTURE_13920_URL_FINAL_PART_3_40021-53940.xml ihub/images/2026-11-02 ihub/extension/iHub_15PRO_SKU_MATRIX.json ihub/extension/iHub_15PRO_EXTENSION_VALIDATION.txt
-          git commit -m 'Add iHub iPhone 15 Pro and Pro Max SKU extension'
-          git push origin main
+          if git diff --cached --quiet; then
+            echo 'Published extension files already match main; nothing to commit.'
+          else
+            git commit -m 'Add iHub iPhone 15 Pro and Pro Max SKU extension'
+            git push origin main
+          fi
 
       - name: Confirm public HTTPS availability
         shell: bash
@@ -92,5 +97,9 @@ jobs:
           Final iHub matrix: 93 SKU, 53,940 ads.
           EOF
           git add ihub/extension/CHECKPOINT_15PRO_COMPLETE.txt
-          git commit -m 'Confirm iHub 15 Pro extension publication'
-          git push origin main
+          if git diff --cached --quiet; then
+            echo 'Publication checkpoint already matches main; nothing to commit.'
+          else
+            git commit -m 'Confirm iHub 15 Pro extension publication'
+            git push origin main
+          fi
