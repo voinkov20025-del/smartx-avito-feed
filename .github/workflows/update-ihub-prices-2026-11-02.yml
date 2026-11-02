@@ -1,0 +1,72 @@
+name: Update iHub final prices 2026-11-02
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-ihub-prices-2026-11-02.yml'
+      - 'ihub/publisher/update_prices_2026_11_02.py'
+
+permissions:
+  contents: write
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Apply requested prices
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ihub/publisher/update_prices_2026_11_02.py
+
+      - name: Validate final feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'STATUS: PASS' ihub/extension/iHub_PRICE_UPDATE_2026-11-02.txt
+          grep -q 'Total ads: 40000' ihub/extension/iHub_PRICE_UPDATE_2026-11-02.txt
+          grep -q 'Requested target ads: 25168' ihub/extension/iHub_PRICE_UPDATE_2026-11-02.txt
+          test "$(grep -o '<Ad>' ihub/feeds/ihub-final-part-1-00001-20000.xml | wc -l)" -eq 20000
+          test "$(grep -o '<Ad>' ihub/feeds/ihub-final-part-2-20001-40000.xml | wc -l)" -eq 20000
+
+      - name: Publish price changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub price updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add \
+            ihub/feeds/ihub-final-part-1-00001-20000.xml \
+            ihub/feeds/ihub-final-part-2-20001-40000.xml \
+            ihub/extension/iHub_PRICE_UPDATE_2026-11-02.txt
+          if git diff --cached --quiet; then
+            echo 'Prices already match requested values.'
+          else
+            git commit -m 'Update final iHub prices'
+            git push origin main
+          fi
+
+      - name: Confirm public feed links unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 8
+          python3 - <<'PY'
+          import urllib.request
+          urls = [
+            'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/ihub-final-part-1-00001-20000.xml',
+            'https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/ihub-final-part-2-20001-40000.xml',
+          ]
+          for url in urls:
+              req = urllib.request.Request(url, headers={'User-Agent':'iHub-price-check/1.0','Range':'bytes=0-2047'})
+              with urllib.request.urlopen(req, timeout=45) as r:
+                  head = r.read(2048)
+                  if r.status not in (200,206) or b'<Ads' not in head:
+                      raise SystemExit(f'public feed check failed: {url}')
+          print('PUBLIC FEED CHECK PASS')
+          PY
