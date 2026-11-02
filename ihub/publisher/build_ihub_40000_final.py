@@ -89,15 +89,21 @@ def load_source():
  return by_addr,all_ids
 
 def selected_addresses():
- import base64,zlib
- b64=Path('ihub/publisher/iHub_40000_CITY_SELECTION.zlib.b64').read_text(encoding='ascii').strip()
- data=zlib.decompress(base64.b64decode(b64)).decode('utf-8')
- rows=list(csv.DictReader(io.StringIO(data)))
+ p=Path('ihub/publisher/iHub_40000_SELECTED_ADDRESSES.txt')
+ rows=[]
+ for i,line in enumerate(p.read_text(encoding='utf-8').splitlines(),1):
+  if not line.strip():
+   continue
+  if '|' not in line:
+   raise RuntimeError(f'invalid selection line {i}: {line!r}')
+  status,addr=line.split('|',1)
+  if status not in ('FULL','PARTIAL'):
+   raise RuntimeError(f'invalid status on line {i}: {status}')
+  rows.append({'rank':str(i),'address':addr,'status':status,'ads':'97' if status=='FULL' else '36'})
  if len(rows)!=413: raise RuntimeError(f'expected 413 selected, got {len(rows)}')
- for r in rows:
-  if r['status']=='PARTIAL_36': r['status']='PARTIAL'
- rows.sort(key=lambda r:int(r['rank']))
  if sum(int(r['ads']) for r in rows)!=40000: raise RuntimeError('selection does not total 40000')
+ if sum(r['status']=='FULL' for r in rows)!=412 or sum(r['status']=='PARTIAL' for r in rows)!=1:
+  raise RuntimeError('selection status counts invalid')
  return rows
 
 def new_ad(template_ad,address,model,memory,color,price,cover):
