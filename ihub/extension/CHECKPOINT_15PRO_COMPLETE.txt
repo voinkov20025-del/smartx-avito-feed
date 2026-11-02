@@ -1,0 +1,8 @@
+CHECKPOINT: 15PRO_EXTENSION_PUBLICATION_CONFIRMED
+Added 24 SKU: iPhone 15 Pro 128/256/512 and iPhone 15 Pro Max 256/512/1TB, four colors each.
+Added 13,920 ads across the same 580 iHub addresses.
+Existing PART 1 and PART 2 were not modified.
+PART 3 contains only the new 13,920 ads.
+Each new ad has exactly 6 images: one approved model/color cover plus the existing five iHub universal cards.
+GitHub Actions verified all 24 new cover URLs and the PART 3 XML URL publicly over HTTPS.
+Final iHub matrix: 93 SKU, 53,940 ads.
