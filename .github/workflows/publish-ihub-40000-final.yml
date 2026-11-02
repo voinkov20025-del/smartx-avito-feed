@@ -1,0 +1,160 @@
+name: Publish final iHub 40000 Avito URL feeds
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-ihub-40000-final.yml'
+      - 'ihub/publisher/build_ihub_40000_final.py'
+      - 'ihub/publisher/iHub_40000_CITY_SELECTION.zlib.b64'
+      - 'ihub/publisher/RUN_40000_FINAL'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      U1: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2Fa7a394c7-ef25-4139-b390-ecdea0bf5aad%2Fhls%3Fexpiration%3D1793726617755%26signature%3D21c78b695a0a899b721193f0e9cd3ab5a092be8e6fb68c32e00c9e566dd5908c&filename=atlas-1.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723018&signature=b3a40526e9432217350372694f603f1be46cab34fa574fa854d874d76b14dece"
+      U2: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2Fff0fc004-e61d-4c35-be63-3929fce3f2ac%2Fhls%3Fexpiration%3D1793726646517%26signature%3Df3e60cfa0237536a4c07fad42c78ce45e9817bb80b0008fd0e0fb647e406af0e&filename=atlas-2.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723047&signature=9e047494be5b5b1b61238ddb474d6a7c05d49cdb5db50cb62f6d5a14028aae8f"
+      U3: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2F8b0487e5-31a1-4477-b00f-7833f33f4d5c%2Fhls%3Fexpiration%3D1793726679084%26signature%3Daeab362b7d920b20a6cb53f1e7376397071a6f475cee6db0c2dde1dc0d4b00bc&filename=atlas-3.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723079&signature=0eca32bb0aa2fd3364a243dcf2e600a07842134175ec2c0bc5dd166d71858ad7"
+      U4: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2Ff70f867c-8580-4848-bb38-a34817ab9ba7%2Fhls%3Fexpiration%3D1793726712818%26signature%3D6c76291ad6da64916138b3cbff5a403fba0716013e5490faeac505cb67d30b71&filename=atlas-4.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723113&signature=d19ec720ca3f23c7a5dcbdc506728cc984976a74c9a1b7ef634ba94be805b94d"
+      U5: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2Fe88b72ed-c850-4515-b7a8-2f9172553b48%2Fhls%3Fexpiration%3D1793726744955%26signature%3Db8427f676b1e875d56f5719518fdc9bb4388fd1ca92cebed1da71482b58e0ea7&filename=atlas-5.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723145&signature=78aea420a3315203aa2425b0e79e2323a4eb7459ca9bb9dbac9f9963b094e0a9"
+      U6: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2F1b770ad7-c8a9-41b5-be6d-84485a54eb59%2Fhls%3Fexpiration%3D1793726773041%26signature%3D394def71628a2f1c93e08f59aa4df591f0de8efa0bb8ecd5e596d83808915860&filename=atlas-6.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723173&signature=33aa56fb8ea697c775c9225e7d6921162f2d1d4a851b453b66016509cab07656"
+      U7: "https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2F5561ffbc-7789-44a6-bf7d-2f4e16b96c8e%2Fhls%3Fexpiration%3D1793726800894%26signature%3Da9d4e6505d62bfc7306db0aded4c7e24b387f6e6452bf0d5938e788126889b76&filename=atlas-7.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1793723201&signature=24f01924996ec397c489d63f6be3766ac202f9fbc3e7246ee70be7b9aea2328f"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+
+      - name: Build final 40000 feed and approved covers
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT1=ihub/feeds/ihub-final-part-1-00001-20000.xml
+          OUT2=ihub/feeds/ihub-final-part-2-20001-40000.xml
+          COUNT="$(find ihub/images/2026-11-02-final -maxdepth 1 -type f -name '*.jpg' 2>/dev/null | wc -l || true)"
+          if [ -s "$OUT1" ] && [ -s "$OUT2" ] && [ "$COUNT" -eq 28 ]; then
+            echo 'Final feed already exists; skipping temporary transport.'
+          else
+            mkdir -p /tmp/ihub-atlas
+            for i in 1 2 3 4 5 6 7; do
+              var="U${i}"
+              url="${!var}"
+              curl -fL --retry 3 --retry-delay 2 "$url" -o "/tmp/ihub-atlas/a${i}.mp4"
+              ffmpeg -hide_banner -loglevel error -y -i "/tmp/ihub-atlas/a${i}.mp4" -frames:v 1 "/tmp/ihub-atlas/a${i}.png"
+            done
+            python3 ihub/publisher/build_ihub_40000_final.py \
+              /tmp/ihub-atlas/a1.png /tmp/ihub-atlas/a2.png /tmp/ihub-atlas/a3.png \
+              /tmp/ihub-atlas/a4.png /tmp/ihub-atlas/a5.png /tmp/ihub-atlas/a6.png \
+              /tmp/ihub-atlas/a7.png
+          fi
+
+      - name: Validate local publication set
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find ihub/images/2026-11-02-final -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 28
+          grep -q 'STATUS: PASS' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'Total ads: 40000' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'Part 1: 20000' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'Part 2: 20000' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'Unique IDs: 40000' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'SKU: 97' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+          grep -q 'Images per ad: exactly 6' ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt
+
+      - name: Publish to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub feed publisher'
+          git config user.email 'actions@users.noreply.github.com'
+          git add \
+            ihub/feeds/ihub-final-part-1-00001-20000.xml \
+            ihub/feeds/ihub-final-part-2-20001-40000.xml \
+            ihub/images/2026-11-02-final \
+            ihub/extension/iHub_40000_PUBLIC_VALIDATION.txt \
+            ihub/AVITO_FEED_URLS_40000.txt
+          if git diff --cached --quiet; then
+            echo 'Final publication already matches main.'
+          else
+            git commit -m 'Publish final iHub 40000 Avito URL feeds'
+            git push origin main
+          fi
+
+      - name: Confirm public HTTPS URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 8
+          python3 - <<'PY'
+          import urllib.request, time
+          base='https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main'
+          feeds=[
+            f'{base}/ihub/feeds/ihub-final-part-1-00001-20000.xml',
+            f'{base}/ihub/feeds/ihub-final-part-2-20001-40000.xml',
+          ]
+          covers=[]
+          from pathlib import Path
+          for p in sorted(Path('ihub/images/2026-11-02-final').glob('*.jpg')):
+            covers.append(f'{base}/ihub/images/2026-11-02-final/{p.name}')
+          errors=[]
+          for url in feeds+covers:
+            ok=False; last=''
+            for _ in range(6):
+              try:
+                req=urllib.request.Request(url,headers={'User-Agent':'iHub-public-check/1.0','Range':'bytes=0-1023'})
+                with urllib.request.urlopen(req,timeout=45) as r:
+                  head=r.read(1024)
+                  if url.endswith('.xml'):
+                    ok=r.status in (200,206) and b'<Ads' in head
+                  else:
+                    ok=r.status in (200,206) and head[:2]==b'\xff\xd8'
+                  if ok: break
+                  last=f'status={r.status}'
+              except Exception as e:
+                last=repr(e)
+              time.sleep(3)
+            if not ok: errors.append((url,last))
+          if errors:
+            raise SystemExit('PUBLIC CHECK FAILED: '+repr(errors[:5]))
+          print('PUBLIC CHECK PASS: 2 XML feeds + 28 new covers')
+          PY
+
+      - name: Save confirmed checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > ihub/publisher/PUBLISH_40000_CHECKPOINT.txt <<'EOF'
+          CHECKPOINT: IHUB_40000_PUBLICATION_CONFIRMED
+          Total ads: 40000
+          Part 1: 20000
+          Part 2: 20000
+          SKU: 97
+          Selected cities: 413 (412 full + 1 partial with 36 ads)
+          Images per ad: exactly 6
+          Existing public iHub images reused: 74
+          New approved covers published: 28
+          Public HTTPS verification: PASS
+          Feed 1: https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/ihub-final-part-1-00001-20000.xml
+          Feed 2: https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/ihub-final-part-2-20001-40000.xml
+          EOF
+          git add ihub/publisher/PUBLISH_40000_CHECKPOINT.txt
+          if git diff --cached --quiet; then
+            echo 'Checkpoint already current.'
+          else
+            git commit -m 'Confirm final iHub 40000 public URLs'
+            git push origin main
+          fi
