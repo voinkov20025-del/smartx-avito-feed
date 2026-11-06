@@ -1,0 +1,66 @@
+name: Diagnose iHub Avito feeds (read-only)
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-ihub-feeds.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect XML and public URLs without changing feeds
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          from collections import Counter
+          import urllib.request,time
+          filenames=[
+            "ihub/feeds/ihub-final-part-1-00001-20000.xml",
+            "ihub/feeds/ihub-final-part-2-20001-40000.xml"
+          ]
+          ids=set(); prices=Counter(); models=Counter(); count=0
+          for filename in filenames:
+            p=Path(filename)
+            print("FILE",filename,"BYTES",p.stat().st_size,flush=True)
+            root=None;n=0
+            for event,el in ET.iterparse(str(p),events=("start","end")):
+              if root is None and event=="start":root=el
+              if event=="end" and el.tag=="Ad":
+                n+=1;count+=1
+                aid=el.findtext("Id")
+                if not aid or aid in ids:raise ValueError("missing or duplicate ID "+str(aid))
+                ids.add(aid)
+                for tag in ["Title","Description","Price","Address","Category"]:
+                  if not el.findtext(tag):raise ValueError(f"missing {tag} on {aid}")
+                imgs=el.find("Images")
+                if imgs is None or len(imgs)!=6:raise ValueError(f"bad image count {aid}")
+                if not all(i.attrib.get("url","").startswith("https://") for i in imgs):
+                  raise ValueError("image URL not https "+aid)
+                model=el.findtext("Model");mem=el.findtext("MemorySize")
+                prices[(model,mem,el.findtext("Price"))]+=1
+                models[model]+=1
+                root.clear()
+            print("PARSED ADS",n,flush=True)
+            if n!=20000:raise ValueError(f"expected 20000 got {n}")
+          print("TOTAL",count,"UNIQUE_IDS",len(ids),"MODELS",dict(models),flush=True)
+          print("PRICES",sorted(prices.items()),flush=True)
+          for filename in filenames:
+            url="https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/"+filename
+            started=time.monotonic()
+            req=urllib.request.Request(url,headers={"User-Agent":"AvitoFeedDiagnostics/1.0","Range":"bytes=0-2047"})
+            try:
+              with urllib.request.urlopen(req,timeout=35) as r:
+                first=r.read(2048)
+                print("PUBLIC URL",r.status,"TYPE",r.headers.get("Content-Type"),"LENGTH",r.headers.get("Content-Length"),"RANGE",r.headers.get("Content-Range"),"SECONDS",round(time.monotonic()-started,2),"XML_START",first[:70],flush=True)
+                if r.status not in (200,206) or b"<Ads" not in first:raise ValueError("bad external response")
+            except Exception as e:
+              print("PUBLIC_URL_ERROR",repr(e),flush=True)
+              raise
+          print("DIAGNOSTIC PASS: XML parseable, two public URLs readable",flush=True)
+          PY
