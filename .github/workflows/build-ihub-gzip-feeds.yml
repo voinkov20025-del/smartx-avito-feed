@@ -1,0 +1,63 @@
+name: Build compressed iHub Avito feeds (non-destructive)
+on:
+  push:
+    paths:
+      - '.github/workflows/build-ihub-gzip-feeds.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - name: Compress original price-approved feeds without changing any ads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import gzip, hashlib, xml.etree.ElementTree as ET, json
+          items=[
+            Path('ihub/feeds/ihub-final-part-1-00001-20000.xml'),
+            Path('ihub/feeds/ihub-final-part-2-20001-40000.xml')
+          ]
+          data=[]
+          for src in items:
+            dest=src.with_suffix('.xml.gz')
+            b=src.read_bytes()
+            with dest.open('wb') as f:
+              with gzip.GzipFile(filename='',mode='wb',compresslevel=9,mtime=0,fileobj=f) as z: z.write(b)
+            restored=gzip.decompress(dest.read_bytes())
+            assert restored==b
+            root=ET.fromstring(restored)
+            assert root.tag=='Ads'
+            n=len(root.findall('Ad'))
+            assert n==20000,(src,n)
+            data.append({'filename':dest.name,'count':n,'original_bytes':len(b),'compressed_bytes':dest.stat().st_size,'sha256_xml':hashlib.sha256(b).hexdigest(),'sha256_gzip':hashlib.sha256(dest.read_bytes()).hexdigest()})
+          Path('ihub/extension/ihub_compressed_feeds_manifest.json').write_text(json.dumps({'status':'PASS','parts':data},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(data,ensure_ascii=False,indent=2))
+          PY
+      - name: Publish compressed copies only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub feeds publisher'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ihub/feeds/*.xml.gz ihub/extension/ihub_compressed_feeds_manifest.json
+          if ! git diff --cached --quiet; then git commit -m 'Publish verified compressed iHub feeds without changing originals'; git push origin main; fi
+      - name: Confirm direct HTTPS access
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import urllib.request
+          base='https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/ihub/feeds/'
+          for fn in ['ihub-final-part-1-00001-20000.xml.gz','ihub-final-part-2-20001-40000.xml.gz']:
+            with urllib.request.urlopen(base+fn,timeout=35) as r:
+              data=r.read()
+              assert r.status==200 and data[:2]==b'\x1f\x8b' and len(data)>100000
+              print(fn,len(data),'gzip OK')
+          PY
