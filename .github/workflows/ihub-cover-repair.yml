@@ -1,0 +1,26 @@
+name: Prepare iHub corrected 15 Pro covers
+on:
+  push:
+    paths: ['.github/workflows/ihub-cover-repair.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install graphics dependency
+        run: python3 -m pip install --disable-pip-version-check pillow
+      - name: Repair 24 black iHub SKU covers without changing live feeds
+        run: python3 ihub/repair/build_covers.py
+      - name: Save 28 verified covers and checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub image repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ihub/images/2026-11-07-repaired ihub/repair/COVERS_REPAIR_CHECKPOINT.txt
+          git commit -m 'Save non-black iHub 15 Pro/Max cover replacements'
+          git push origin main
