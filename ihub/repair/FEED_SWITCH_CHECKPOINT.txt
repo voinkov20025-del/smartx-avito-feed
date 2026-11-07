@@ -1,0 +1,34 @@
+STATUS: FEEDS_UPDATED_PENDING_EXTERNAL_CHECK
+Existing 5 public XML URL paths unchanged; three relevant XML files updated in-place only inside Images, 40020 originals untouched.
+All existing Id, Model, Title, Price, Address, Description and other data byte-identical before/after Images normalization.
+Changed first-image URLs now point to new 28 repaired nonblack files; 5 universal images preserved unchanged per ad.
+Railway gateway continues to use /ihub-1.xml and /ihub-2.xml, fed by the two .gz paths.
+[
+  {
+    "file": "ihub/feeds/ihub-final-part-1-00001-20000.xml",
+    "ad_count": 20000,
+    "replaced_first_image_url_count": 5768,
+    "repaired_sku_count": 28,
+    "sha256_before": "dde40993a844508179fb328bf510c027588ac62d367658c61a665ff47ede4b0b",
+    "sha256_after": "29c5cb70d303604b9c345260e847365083d04b0bdf9fce1709258992820be7bf",
+    "gzip_sha256": "9eb4cbd140b85fb6b79ca89c55a7bb784390e410f401cea3725159b4444b476a"
+  },
+  {
+    "file": "ihub/feeds/ihub-final-part-2-20001-40000.xml",
+    "ad_count": 20000,
+    "replaced_first_image_url_count": 5796,
+    "repaired_sku_count": 28,
+    "sha256_before": "139b5f14e93a083e7089b6ef10af9ce7511d0f3af59a0fd2138a12cdcec607bc",
+    "sha256_after": "80ceed7efa2f27af0f11664fd6d83b0a1eca7a8a4429a1a16edacf26267a9c9e",
+    "gzip_sha256": "d28cfef7e79aeac79bd29e992daef81528f7e1b0f145d74192ec5b19a0884ce1"
+  },
+  {
+    "file": "ihub/feeds/iHub_STRUCTURE_13920_URL_FINAL_PART_3_40021-53940.xml",
+    "ad_count": 13920,
+    "replaced_first_image_url_count": 13920,
+    "repaired_sku_count": 24,
+    "sha256_before": "8d86f0e182333e8fc947ccc041728a3f25812473896f37adf77679db444eec1d",
+    "sha256_after": "ab10ee438c1bf5580308f7e565fcc7d4bcd111597d68a135213a519ac863f21c",
+    "gzip_sha256": null
+  }
+]

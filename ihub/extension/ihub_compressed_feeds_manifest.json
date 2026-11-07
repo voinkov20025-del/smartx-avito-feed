@@ -4,18 +4,18 @@
     {
       "filename": "ihub-final-part-1-00001-20000.xml.gz",
       "count": 20000,
-      "original_bytes": 90834484,
-      "compressed_bytes": 1031291,
-      "sha256_xml": "dde40993a844508179fb328bf510c027588ac62d367658c61a665ff47ede4b0b",
-      "sha256_gzip": "88d292cdc516edf9abc04fd42ee0966c764b2d4b73f0578b66668dd9bcc46095"
+      "original_bytes": 90851788,
+      "compressed_bytes": 1035095,
+      "sha256_xml": "29c5cb70d303604b9c345260e847365083d04b0bdf9fce1709258992820be7bf",
+      "sha256_gzip": "9eb4cbd140b85fb6b79ca89c55a7bb784390e410f401cea3725159b4444b476a"
     },
     {
       "filename": "ihub-final-part-2-20001-40000.xml.gz",
       "count": 20000,
-      "original_bytes": 90672051,
-      "compressed_bytes": 1105389,
-      "sha256_xml": "139b5f14e93a083e7089b6ef10af9ce7511d0f3af59a0fd2138a12cdcec607bc",
-      "sha256_gzip": "deb74fb2984ef6fc0c252759e323f03a2eea2c847adb33237c8b9ac7e2d5b35b"
+      "original_bytes": 90689439,
+      "compressed_bytes": 1109423,
+      "sha256_xml": "80ceed7efa2f27af0f11664fd6d83b0a1eca7a8a4429a1a16edacf26267a9c9e",
+      "sha256_gzip": "d28cfef7e79aeac79bd29e992daef81528f7e1b0f145d74192ec5b19a0884ce1"
     }
   ]
 }
