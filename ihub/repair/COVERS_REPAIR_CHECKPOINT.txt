@@ -1,0 +1,33 @@
+STATUS: COVERS_READY_FOR_FEED_SWITCH
+28 corrected covers; 4 pre-existing valid 128 cards unchanged; 24 derived from corresponding same-color iHub 128 approved cover without changing non-image ad fields.
+All JPEGs 1254x1254; black-image ratio <0.82; source files and current feed links untouched.
+Next: visually inspect then switch ONLY Images (first cover URL) in 40000 and extension feeds. Preserve all XML public paths.
+
+iphone-15-pro-128-black-01-cover.jpg | unchanged approved 128 cover | bytes=190715 | black=0.176 | sha256=71fae45142e4b14d10679d85cb725327fa1664ead5f7b7db4862b0a631e8358f
+iphone-15-pro-128-blue-01-cover.jpg | unchanged approved 128 cover | bytes=229701 | black=0.083 | sha256=f6a8e1af4ae5b944d65a1ab73801826b84afdf07b925294af56f9c3baf048067
+iphone-15-pro-128-gray-01-cover.jpg | unchanged approved 128 cover | bytes=195183 | black=0.168 | sha256=8746c84960cfd56745268f7085098a2825605af77ca140a9b2f8be60491f23c9
+iphone-15-pro-128-white-01-cover.jpg | unchanged approved 128 cover | bytes=197950 | black=0.108 | sha256=29e7dc3d4ae936c0e9224ccfe474149b51b63bf213e687c03f6cd76694c1c30a
+iphone-15-pro-1tb-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=187151 | black=0.176 | sha256=a7903c03753c1b13049bd3d66aadb54ac1e215e4c49e53e7a1247d4557898686
+iphone-15-pro-1tb-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=223326 | black=0.084 | sha256=06c8b3398336e6226c22b8c6f3a887e34f41c013c1faef879e0066464d29da92
+iphone-15-pro-1tb-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=190966 | black=0.167 | sha256=9b4ea0ed9abf7e73aa8d70ed5d169d340c2f402ac21c943e8c3be08d48d7d031
+iphone-15-pro-1tb-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=194810 | black=0.104 | sha256=09a279fdf191f30d15c386656070253b11690557ad2fc76c216c7e3dbd7fb4c3
+iphone-15-pro-256-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=189842 | black=0.176 | sha256=eb80788c6473fdcad3316ded97a636e23c7f1f0d95a6ed9a7d7f53e554366329
+iphone-15-pro-256-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=225994 | black=0.084 | sha256=122d1e4d45dc26dee38d5b6c1850cdf882784390b270c380561bd9f7ca677b69
+iphone-15-pro-256-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=193641 | black=0.167 | sha256=488bd90994c78cabd46d9ed79d1777d43706e6c069a325c06d7427a5576079de
+iphone-15-pro-256-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=197448 | black=0.104 | sha256=f92f0861cc15280904ccbde1faf71e2150ad0811356e2b200d934f1a008189cc
+iphone-15-pro-512-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=189272 | black=0.176 | sha256=50358b71a5c0923965a4a19a3adc94724fce791100f3f597c361fd452e8c88ce
+iphone-15-pro-512-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=225421 | black=0.084 | sha256=6dbed956ea6c1d6ea54c8e96d0f42c49ff598b8e82611c906da1c412e1245705
+iphone-15-pro-512-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=193065 | black=0.167 | sha256=90cbd73d4e31230da64a2b0b3717cb4dda2b0d367e0af0095e90f6c76f3aa9af
+iphone-15-pro-512-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=196897 | black=0.104 | sha256=f6edae4666b73cad653bfc2a827267c6a6139eb186b391f49b6309e4261820e1
+iphone-15-pro-max-1tb-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=187007 | black=0.160 | sha256=d8fd1b14e26cffdb3c2e8ce7a87a263d7416de5ae762225ae18fc680b55e8f30
+iphone-15-pro-max-1tb-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=221121 | black=0.079 | sha256=af86bcfd1ae56b4239eee7a52e2611eb61873372cebd79c984b306b7681ee9d4
+iphone-15-pro-max-1tb-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=192564 | black=0.148 | sha256=b4bf643b17bfd5480c585bae5a2abf0375081ed4a023c6cec5c306ec67aa746f
+iphone-15-pro-max-1tb-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=196441 | black=0.090 | sha256=a04c33c8db2c92bdc46b77d670ea4a50713878fc7db05f2cb3ac766378ec8665
+iphone-15-pro-max-256-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=189736 | black=0.160 | sha256=630a9fd04d374b4aaa90c81c7ed82879e15459de333b9ef830d935403e018916
+iphone-15-pro-max-256-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=223819 | black=0.079 | sha256=9054aeadcbf55381aeb2ee3dd4410aaeb12ce16b168792491de97e2989d4d5bc
+iphone-15-pro-max-256-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=195160 | black=0.148 | sha256=1b2e1c9da4cd1e33b571322239890eac8628d4be4336304dd668600afab43d45
+iphone-15-pro-max-256-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=199125 | black=0.090 | sha256=6c58eb0fc1a3cb55bd3557ca6fd1ab564e603f7d507126cee853182821adfb90
+iphone-15-pro-max-512-black-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=189161 | black=0.160 | sha256=0491b1d7d8a1e8c76f4ecea31f477976fda6762a4192f31e9be1c6be42476488
+iphone-15-pro-max-512-blue-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=223205 | black=0.079 | sha256=4dd8955d23edda834027e505dc92248ffce55a6fe51c7693ac9d65c315740720
+iphone-15-pro-max-512-gray-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=194612 | black=0.148 | sha256=401b3ec309ef3bf7c7941d34d0c4596bb4bc7a84887865f755ab12956ef4a0d2
+iphone-15-pro-max-512-white-01-cover.jpg | same-color iHub triple-camera cover with corrected model/memory text | bytes=198503 | black=0.090 | sha256=10ccff7390a89d84803b7dafe7e5c72bec15039c09210b8078da37bf6d5ea744
