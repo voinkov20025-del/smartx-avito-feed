@@ -1,4 +1,4 @@
-name: Prepare iHub corrected 15 Pro covers
+name: Prepare iHub corrected 15 Pro covers (watermark clean)
 on:
   push:
     paths: ['.github/workflows/ihub-cover-repair.yml']
