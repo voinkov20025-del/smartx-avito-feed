@@ -1,0 +1,119 @@
+name: Repair live iHub Images while preserving XML and Railway URLs
+on:
+  push:
+    paths:
+      - '.github/workflows/ihub-switch-live-images.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure verified repaired covers are ready
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find ihub/images/2026-11-07-repaired -maxdepth 1 -name '*.jpg' -type f | wc -l)" -eq 28
+          grep -q 'STATUS: COVERS_READY_FOR_FEED_SWITCH' ihub/repair/COVERS_REPAIR_CHECKPOINT.txt
+      - name: Replace ONLY Images in existing XML and rebuild Railway gzip
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ihub/repair/switch_live_images.py
+          grep -q 'STATUS: FEEDS_UPDATED_PENDING_EXTERNAL_CHECK' ihub/repair/FEED_SWITCH_CHECKPOINT.txt
+      - name: Commit corrected XML under EXISTING URL paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'iHub safe image switch'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ihub/feeds/ihub-final-part-1-00001-20000.xml ihub/feeds/ihub-final-part-2-20001-40000.xml ihub/feeds/iHub_STRUCTURE_13920_URL_FINAL_PART_3_40021-53940.xml
+          git add ihub/feeds/ihub-final-part-1-00001-20000.xml.gz ihub/feeds/ihub-final-part-2-20001-40000.xml.gz
+          git add ihub/extension/ihub_compressed_feeds_manifest.json ihub/repair/FEED_SWITCH_CHECKPOINT.txt
+          git commit -m 'Replace only black/wrong iHub Images in existing live feeds'
+          git push origin main
+      - name: Verify public 28 JPG URLs and existing XML HTTPS URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import urllib.request,time
+          from pathlib import Path
+          base='https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/'
+          paths=[str(p) for p in Path('ihub/images/2026-11-07-repaired').glob('*.jpg')]
+          paths += [
+            'ihub/feeds/ihub-final-part-1-00001-20000.xml',
+            'ihub/feeds/ihub-final-part-2-20001-40000.xml',
+            'ihub/feeds/iHub_STRUCTURE_13920_URL_FINAL_PART_3_40021-53940.xml'
+          ]
+          assert len(paths)==31
+          errors=[]
+          for path in paths:
+              ok=False;last=''
+              for retry in range(5):
+                  try:
+                      req=urllib.request.Request(base+path,headers={'Range':'bytes=0-255','User-Agent':'iHub-Images-Repair-Verify'})
+                      with urllib.request.urlopen(req,timeout=35) as r:
+                          head=r.read(255)
+                          ok=r.status in (200,206) and (head[:2]==b'\xff\xd8' if path.endswith('.jpg') else b'<Ads' in head)
+                          if ok:break
+                          last=f'status={r.status}, head={head[:18]!r}'
+                  except Exception as e:last=repr(e)
+                  time.sleep(6)
+              if not ok:errors.append((path,last))
+          if errors:raise SystemExit('PUBLIC CHECK FAILED: '+repr(errors))
+          print('PUBLIC 28 JPG AND 3 XML LINKS VERIFIED',flush=True)
+          PY
+      - name: Verify unchanged Railway gateway URLs serve updated exact XML
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import urllib.request,hashlib,time
+          parts=[
+              ('https://ihub-xml-gateway-production.up.railway.app/ihub-1.xml','ihub/feeds/ihub-final-part-1-00001-20000.xml'),
+              ('https://ihub-xml-gateway-production.up.railway.app/ihub-2.xml','ihub/feeds/ihub-final-part-2-20001-40000.xml')
+          ]
+          for url,local in parts:
+              with open(local,'rb') as f: expected=hashlib.file_digest(f,'sha256').hexdigest()
+              ok=False;last=''
+              for attempt in range(5):
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'iHub-Railway-Public-SHA-Check'})
+                      h=hashlib.sha256();size=0
+                      with urllib.request.urlopen(req,timeout=170) as r:
+                          status=r.status;ctype=r.headers.get('Content-Type','')
+                          while True:
+                              buf=r.read(1024*1024)
+                              if not buf:break
+                              h.update(buf);size+=len(buf)
+                      if status==200 and h.hexdigest()==expected:
+                          ok=True
+                          print('RAILWAY VERIFIED',url,'bytes',size,'sha256',expected,flush=True)
+                          break
+                      last=f'status={status}, sha={h.hexdigest()}, size={size}, type={ctype}'
+                  except Exception as e:last=repr(e)
+                  print('Railway validation retry',attempt+1,url,last,flush=True)
+                  time.sleep(20)
+              if not ok:raise SystemExit('Railway URL did not serve new exact XML: '+url+' '+last)
+          PY
+      - name: Save public publication confirmation checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > ihub/repair/PUBLIC_FIX_CONFIRMED.txt <<'EOF'
+          STATUS: CONFIRMED
+          Existing public XML paths and Railway service URLs were not changed.
+          Updated only Images in 40000-part1, 40000-part2 and 13920 extension XML.
+          Updated corresponding two .xml.gz files consumed by Railway.
+          28 repaired matching covers public; 3 live XML URLs public.
+          Both Railway endpoints returned exact SHA256-matching latest XML after release.
+          Existing IDs, prices, addresses, titles, descriptions and other non-Images bytes unchanged.
+          40020 legacy XML parts were not modified.
+          EOF
+          git add ihub/repair/PUBLIC_FIX_CONFIRMED.txt
+          git commit -m 'Confirm live iHub Images and Railway URLs verified'
+          git push origin main
