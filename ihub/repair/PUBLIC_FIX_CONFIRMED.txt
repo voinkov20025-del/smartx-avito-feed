@@ -1,0 +1,8 @@
+STATUS: CONFIRMED
+Existing public XML paths and Railway service URLs were not changed.
+Updated only Images in 40000-part1, 40000-part2 and 13920 extension XML.
+Updated corresponding two .xml.gz files consumed by Railway.
+28 repaired matching covers public; 3 live XML URLs public.
+Both Railway endpoints returned exact SHA256-matching latest XML after release.
+Existing IDs, prices, addresses, titles, descriptions and other non-Images bytes unchanged.
+40020 legacy XML parts were not modified.
