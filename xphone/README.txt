@@ -1,0 +1,1 @@
+XPhone feed hosting staging. The two feed URLs should only be used after XML and JPG image assets have been fully uploaded and verified.
