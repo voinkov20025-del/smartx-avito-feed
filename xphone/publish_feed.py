@@ -29,6 +29,7 @@ def publish(package_path, dest):
         photo_names = set(names)
         ids = set()
         addresses = set()
+        address_cover_pairs = set()
         covers = Counter()
         refs = 0
         for part in (1,2):
@@ -48,6 +49,10 @@ def publish(package_path, dest):
                 for position, img in enumerate(images):
                     name = img.attrib.pop("name", None)
                     assert name in photo_names, "Image missing from archive: "+str(name)
+                    if position == 0:
+                        pair = (address, name)
+                        assert pair not in address_cover_pairs, "Duplicate city+SKU: " + str(pair)
+                        address_cover_pairs.add(pair)
                     assert "url" not in img.attrib, "Unexpected original URL"
                     img.set("url", RAW_ROOT + quote(name))
                     refs += 1
@@ -57,6 +62,7 @@ def publish(package_path, dest):
         assert len(ids) == 40000, "Unexpected number of unique IDs"
         assert len(addresses) == 409, "Unexpected number of pickup addresses"
         assert len(covers) == 98, "Unexpected number of SKU covers"
+        assert len(address_cover_pairs) == 40000, "Duplicate address+SKU pairs"
         (dest / "VALIDATION.txt").write_text(
             f"ADS: {len(ids)}\nADDRESSES: {len(addresses)}\nSKU COVERS: {len(covers)}\n"
             f"JPG: {len(photo_names)}\nIMAGE REFS: {refs}\n"
