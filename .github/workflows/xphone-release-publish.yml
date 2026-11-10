@@ -1,0 +1,46 @@
+name: Publish XPhone Avito feeds from GitHub Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: startsWith(github.event.release.tag_name, 'xphone-avito-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Download single XPhone upload package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p /tmp/xphone-release
+          gh release download "$RELEASE_TAG" --pattern "XPhone_GITHUB_RELEASE_PACKAGE.zip" --dir /tmp/xphone-release
+          test -s /tmp/xphone-release/XPhone_GITHUB_RELEASE_PACKAGE.zip
+
+      - name: Convert image names to public HTTPS URLs and validate all 40000 ads
+        run: |
+          python3 xphone/publish_feed.py /tmp/xphone-release/XPhone_GITHUB_RELEASE_PACKAGE.zip xphone
+
+      - name: Commit two XML feeds and 103 photos to the public branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add xphone/feed-part-1.xml xphone/feed-part-2.xml xphone/images xphone/VALIDATION.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish XPhone 40000 ads and 103 images"
+            git push origin HEAD:main
+          fi
+
+      - name: Print Avito feed links
+        run: |
+          echo "PART_1=https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/xphone/feed-part-1.xml"
+          echo "PART_2=https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/xphone/feed-part-2.xml"
