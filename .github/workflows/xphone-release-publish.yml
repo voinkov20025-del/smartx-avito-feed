@@ -23,12 +23,12 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           mkdir -p /tmp/xphone-release
-          gh release download "$RELEASE_TAG" --pattern "XPhone_GITHUB_RELEASE_PACKAGE.zip" --dir /tmp/xphone-release
-          test -s /tmp/xphone-release/XPhone_GITHUB_RELEASE_PACKAGE.zip
+          gh release download "$RELEASE_TAG" --pattern "XPhone_GITHUB_UPLOAD_UNDER_25MB.zip" --dir /tmp/xphone-release
+          test -s /tmp/xphone-release/XPhone_GITHUB_UPLOAD_UNDER_25MB.zip
 
       - name: Convert image names to public HTTPS URLs and validate all 40000 ads
         run: |
-          python3 xphone/publish_feed.py /tmp/xphone-release/XPhone_GITHUB_RELEASE_PACKAGE.zip xphone
+          python3 xphone/publish_feed.py /tmp/xphone-release/XPhone_GITHUB_UPLOAD_UNDER_25MB.zip xphone
 
       - name: Commit two XML feeds and 103 photos to the public branch
         run: |
