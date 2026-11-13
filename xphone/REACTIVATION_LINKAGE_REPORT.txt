@@ -1,0 +1,13 @@
+XPhone Avito legacy reactivation linkage / 2026-11-13
+Links previously published AvitoId numbers to 1517 XPhone rows.
+All other XML bytes are unchanged: PASS
+Unchanged custom IDs (all ads): 40000
+Existing ads linked by AvitoId: 1517
+Expired linked: 1514
+Removed linked: 3
+Out-of-plan old ads omitted: 10
+No DateBegin, DateEnd, ListingFee added or edited.
+Paid-wallet fallback NOT enabled: PASS
+Avito processing / balance / moderation NOT VERIFIED.
+Part 1: 20000 ads, 1517 linked, 51840631 bytes
+Part 2: 20000 ads, 0 linked, 51472554 bytes
