@@ -1,0 +1,56 @@
+name: Audit XPhone expired listing reactivation settings
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xphone-reactivation-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect publishing parameters without changing XML
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from collections import Counter
+          from pathlib import Path
+          fields=["DateBegin","DateEnd","ListingFee","AdStatus","AvitoId"]
+          all_count=0
+          old_count=0
+          count_fields={k:Counter() for k in fields}
+          old_fields={k:Counter() for k in fields}
+          old_samples=[]
+          old_missing_id=0
+          all_sample=[]
+          for f in (Path("xphone/feed-part-1.xml"),Path("xphone/feed-part-2.xml")):
+              for event,el in ET.iterparse(str(f),events=("end",)):
+                  if el.tag!="Ad":continue
+                  id_=el.findtext("Id") or ""
+                  all_count+=1
+                  old=id_.startswith("xph_20261013_")
+                  old_count+=int(old)
+                  if old and len(old_samples)<4:
+                      old_samples.append((id_,{k:el.findtext(k) for k in fields}))
+                  if len(all_sample)<3:
+                      all_sample.append((id_,[(x.tag, (x.text or "")[:80]) for x in list(el)[:12]]))
+                  for k in fields:
+                      v=el.findtext(k)
+                      label="<absent>" if v is None else (v.strip() or "<empty>")
+                      count_fields[k][label]+=1
+                      if old:old_fields[k][label]+=1
+                  el.clear()
+          print("TOTAL_ADS",all_count,flush=True)
+          print("OLD_PREFIX_COUNT",old_count,flush=True)
+          print("ALL_FIELDS", {k:dict(v.most_common(8)) for k,v in count_fields.items()},flush=True)
+          print("OLD_FIELDS", {k:dict(v.most_common(15)) for k,v in old_fields.items()},flush=True)
+          print("OLD_SAMPLES",old_samples,flush=True)
+          print("ALL_SAMPLE",all_sample,flush=True)
+          PY
