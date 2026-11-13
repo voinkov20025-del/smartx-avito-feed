@@ -1,0 +1,56 @@
+name: Verify 1517 XPhone AvitoId linkages on public feeds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xphone-verify-reactivation-public.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-public-xml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Independently download and validate published XML URLs
+        run: |
+          python3 - <<'PY'
+          from urllib.request import Request, urlopen
+          from xml.etree.ElementTree import iterparse
+          from collections import Counter
+          root="https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/xphone/"
+          total=0;linked=0;ids=set();addr=set();links=set();coverage=Counter()
+          for part in (1,2):
+              url=root+f"feed-part-{part}.xml"
+              req=Request(url,headers={"User-Agent":"XPhone-public-reactivation-audit"})
+              with urlopen(req,timeout=120) as response:
+                  assert response.status==200,response.status
+                  per=0
+                  for _,element in iterparse(response,events=("end",)):
+                      if element.tag!="Ad":continue
+                      per+=1
+                      identifier=element.findtext("Id")
+                      assert identifier and identifier not in ids
+                      ids.add(identifier)
+                      addr.add(element.findtext("Address"))
+                      avito_id=element.findtext("AvitoId")
+                      if avito_id:
+                          assert identifier.startswith("xph_20261013_")
+                          assert avito_id.isdigit() and len(avito_id)>=9
+                          linked+=1
+                      ims=element.find("Images")
+                      assert ims is not None
+                      links.update(x.get("url") for x in ims.findall("Image"))
+                      element.clear()
+              assert per==20000,(part,per)
+              print(f"PART_{part}_HTTP_200_ADS={per}",flush=True)
+              total+=per
+          assert total==len(ids)==40000
+          assert len(addr)==409,len(addr)
+          assert linked==1517,linked
+          assert len(links)==103,len(links)
+          print(f"TOTAL={total} LINKED_AVITO_IDS={linked} ADDRESSES={len(addr)} UNIQUE_IMAGES={len(links)} CHECK=PASS",flush=True)
+          PY
