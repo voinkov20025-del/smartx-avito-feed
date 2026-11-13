@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/xphone-public-check.yml'
+      - 'xphone/feed-part-*.xml'
   workflow_dispatch:
 
 permissions:
