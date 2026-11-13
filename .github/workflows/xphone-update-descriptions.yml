@@ -1,0 +1,37 @@
+name: Apply user-approved XPhone descriptions to 40000 Avito ads
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xphone-update-descriptions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-xphone-descriptions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Replace ONLY Description elements and validate both XML files
+        run: python3 xphone/update_descriptions.py
+
+      - name: Commit and publish both updated XML feeds
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add xphone/feed-part-1.xml xphone/feed-part-2.xml xphone/DESCRIPTION_UPDATE_REPORT.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Update descriptions of all 40000 XPhone Avito listings"
+            git push origin HEAD:main
+          fi
+
+      - name: Show complete description validation report
+        run: cat xphone/DESCRIPTION_UPDATE_REPORT.txt
