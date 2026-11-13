@@ -1,0 +1,100 @@
+name: Verify public XPhone Avito feed URLs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xphone-public-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-url-smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Inspect both public XML URLs and all referenced image URLs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from collections import Counter
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+          from xml.etree.ElementTree import iterparse
+          import sys
+
+          base = "https://raw.githubusercontent.com/voinkov20025-del/smartx-avito-feed/main/xphone/"
+          feeds = [base+"feed-part-1.xml", base+"feed-part-2.xml"]
+          all_ids, all_addr, combos, img_urls = set(), set(), set(), set()
+          errors = []
+          total = 0
+
+          def head(url):
+              request = Request(url, method="HEAD", headers={"User-Agent":"XPhone-Avito-SelfCheck/1.0"})
+              with urlopen(request, timeout=45) as response:
+                  return response.status, response.headers.get("Content-Type",""),response.headers.get("Content-Length","")
+
+          for i,url in enumerate(feeds,1):
+              try:
+                  status,ctype,clen = head(url)
+                  print(f"FEED_{i}_HEAD status={status} content_type={ctype} length={clen}",flush=True)
+                  if status != 200: errors.append(f"FEED_{i} HEAD status {status}")
+                  request = Request(url, headers={"User-Agent":"XPhone-Avito-SelfCheck/1.0"})
+                  with urlopen(request, timeout=120) as response:
+                      count=0
+                      for _,elem in iterparse(response, events=("end",)):
+                          if elem.tag != "Ad": continue
+                          count+=1
+                          id_=elem.findtext("Id")
+                          addr=elem.findtext("Address")
+                          photos=elem.find("Images")
+                          urls=[] if photos is None else [x.get("url") for x in photos.findall("Image")]
+                          if not id_ or id_ in all_ids: errors.append(f"missing/duplicate ID: {id_}")
+                          if not addr: errors.append(f"missing address {id_}")
+                          if not urls or not all(s and s.startswith(base+"images/") for s in urls):
+                              errors.append(f"missing or nonpublic image URL {id_}")
+                          if id_: all_ids.add(id_)
+                          if addr: all_addr.add(addr)
+                          if urls:
+                              key=(addr,urls[0])
+                              if key in combos: errors.append(f"duplicate address+cover at {id_}")
+                              combos.add(key)
+                              img_urls.update(urls)
+                          elem.clear()
+                  print(f"FEED_{i}_XML_PARSED ads={count}",flush=True)
+                  total+=count
+                  if count!=20000: errors.append(f"feed {i} count {count} expected 20000")
+              except Exception as ex:
+                  errors.append(f"FEED_{i} error: {type(ex).__name__}: {ex}")
+                  print(errors[-1],flush=True)
+
+          if total!=40000:errors.append(f"total ads {total}")
+          if len(all_ids)!=40000:errors.append(f"unique ID {len(all_ids)}")
+          if len(all_addr)!=409:errors.append(f"unique addresses {len(all_addr)}")
+          if len(combos)!=40000:errors.append(f"unique address+SKU combos {len(combos)}")
+          print(f"TOTAL_ADS={total} UNIQUE_IDS={len(all_ids)} ADDRESSES={len(all_addr)} UNIQUE_IMAGE_URLS={len(img_urls)}",flush=True)
+          def check_image(url):
+              try:
+                  status,ctype,clen = head(url)
+                  return url,status,ctype,clen,None
+              except Exception as ex:
+                  return url,0,"","",str(ex)
+          image_failures=[]
+          if img_urls:
+              with ThreadPoolExecutor(max_workers=10) as pool:
+                  futures=[pool.submit(check_image,url) for url in img_urls]
+                  for f in as_completed(futures):
+                      url,status,ctype,clen,err=f.result()
+                      if status!=200 or not ctype.startswith("image/"):
+                          image_failures.append((url,status,ctype,err))
+              print(f"IMAGE_HEAD_CHECK total={len(img_urls)} failed={len(image_failures)}",flush=True)
+              for item in image_failures[:10]:print("IMAGE_FAILURE",item,flush=True)
+          if image_failures:errors.append(f"Failed public image HEAD: {len(image_failures)}")
+          print(f"CHECK_RESULT={'PASS' if not errors else 'FAIL'}",flush=True)
+          if errors:
+              for err in errors[:30]:print("ERROR",err,flush=True)
+              sys.exit(1)
+          PY
