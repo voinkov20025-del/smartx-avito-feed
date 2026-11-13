@@ -1,0 +1,10 @@
+XPhone — updated descriptions, 2026-11-13
+Only the contents of <Description> tags changed.
+User-provided description preserved verbatim; line breaks rendered as <br>.
+IDs and all other XML fields remain unchanged, confirmed by byte-for-byte masked comparison.
+ADS=40000
+ADDRESSES=409
+UNIQUE_IMAGE_URLS=103
+PART_1: ads=20000 size=51796638 sha256=98d9f958873e6f756de0c4267da4bed966b394b8415493f69a9ac36b22e7b9e0
+PART_2: ads=20000 size=51472554 sha256=eea792335629f025f51728d36a5cc8e9ba9d957a110a87eac2f03d6b7531d065
+STATUS=PASS (GitHub XML checks; Avito processing after update not yet verified)
