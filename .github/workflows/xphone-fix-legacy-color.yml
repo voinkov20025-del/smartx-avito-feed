@@ -1,0 +1,34 @@
+name: Fix mandatory Color for 1517 legacy XPhone Avito listings
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xphone-fix-legacy-color.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-legacy-colors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Add precise Color from original Avito export to legacy rows only
+        run: python3 xphone/repair_missing_legacy_colors.py
+      - name: Publish same stable XPhone URLs without altering other ad attributes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add xphone/feed-part-1.xml xphone/feed-part-2.xml xphone/COLOR_FIX_REPORT.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix missing mandatory Color for 1517 linked old XPhone ads"
+            git push origin HEAD:main
+          fi
+      - name: Show color repair audit
+        run: cat xphone/COLOR_FIX_REPORT.txt
