@@ -1,0 +1,12 @@
+XPhone fix: mandatory Color for old listings / 2026-11-14
+Source: original Avito export of 1527 historical listings
+Rows actually updated in 40000 XML feed: 1517
+Out-of-plan original rows skipped: 10
+Older/expired listings may already have been manually relisted: previous ID and AvitoId preserved
+Original values retained (Color): {'белый': 243, 'голубой': 86, 'зеленый': 172, 'золотистый': 69, 'розовый': 103, 'серебристый': 70, 'серый': 105, 'синий': 221, 'фиолетовый': 103, 'черный': 345}
+Other bytes, including price, address, description and images, unchanged: PASS
+No new Id, no new AvitoId, no DateBegin/DateEnd, no ListingFee: PASS
+Total ads: 40000; distinct approved addresses: 409; image URLs: 103
+Avito acceptance / 1512 error resolution / remaining blocked: NOT YET VERIFIED
+PART_1: colors_added=1517, feed_bytes=51883250
+PART_2: colors_added=0, feed_bytes=51472554
