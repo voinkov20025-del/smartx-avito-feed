@@ -40,6 +40,8 @@ jobs:
                       if avito_id:
                           assert identifier.startswith("xph_20261013_")
                           assert avito_id.isdigit() and len(avito_id)>=9
+                          color=element.findtext("Color")
+                          assert color in {"черный","белый","синий","зеленый","серый","фиолетовый","розовый","голубой","серебристый","золотистый"}, (identifier,color)
                           linked+=1
                       ims=element.find("Images")
                       assert ims is not None
