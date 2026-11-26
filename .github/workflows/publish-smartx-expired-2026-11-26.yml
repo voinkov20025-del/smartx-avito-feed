@@ -1,0 +1,111 @@
+name: Publish SmartX expired-only feeds
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: ${{ startsWith(github.event.release.tag_name, 'smartx-expired-2026-11-26') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download uploaded feed archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_JSON: ${{ toJSON(github.event.release) }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.request
+          release=json.loads(os.environ["RELEASE_JSON"])
+          assets=[a for a in release.get("assets",[]) if a["name"]=="SmartX_EXPIRED_ONLY_49966_NEW_IDS_PRICES_2026-11-26.zip"]
+          assert len(assets)==1, "Upload the exact ZIP asset to this release before publishing"
+          url=assets[0]["url"]
+          headers={"Accept":"application/octet-stream","Authorization":"Bearer "+os.environ["GH_TOKEN"],"X-GitHub-Api-Version":"2022-11-28"}
+          req=urllib.request.Request(url,headers=headers)
+          with urllib.request.urlopen(req, timeout=180) as response:
+              content=response.read()
+          assert content[:2]==b"PK", "ZIP asset did not download as ZIP"
+          open("/tmp/smartx-expired.zip","wb").write(content)
+          print("Downloaded ZIP bytes:",len(content))
+          PY
+      - name: Validate exactly 49966 expired ads and replace three live XML feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile, xml.etree.ElementTree as ET
+          archive=Path("/tmp/smartx-expired.zip")
+          sources=[
+            "SmartX_EXPIRED_ONLY_2026-11-26_PART_1_of_3.xml",
+            "SmartX_EXPIRED_ONLY_2026-11-26_PART_2_of_3.xml",
+            "SmartX_EXPIRED_ONLY_2026-11-26_PART_3_of_3.xml",
+          ]
+          dests=[
+            Path("feeds/smartx-final-part-1-00001-20000.xml"),
+            Path("feeds/smartx-final-part-2-20001-40000.xml"),
+            Path("feeds/smartx-final-part-3-40001-50000.xml"),
+          ]
+          expected=[20000,20000,9966]
+          ids=set()
+          prices={
+             ("iPhone 15","128 ГБ"):40990,
+             ("iPhone 15","256 ГБ"):43990,
+             ("iPhone 15 Pro","128 ГБ"):55990,
+             ("iPhone 15 Pro","256 ГБ"):57990,
+             ("iPhone 15 Pro","512 ГБ"):60990,
+             ("iPhone 15 Pro Max","256 ГБ"):65990,
+             ("iPhone 15 Pro Max","512 ГБ"):69990,
+             ("iPhone 15 Pro Max","1024 ГБ"):73990,
+          }
+          observed=set()
+          total=0
+          with zipfile.ZipFile(archive) as z:
+             assert set(sources).issubset(set(z.namelist())), "ZIP does not contain all 3 XMLs"
+             for src,dst,count in zip(sources,dests,expected):
+                content=z.read(src)
+                assert content.startswith(b"<?xml")
+                root=ET.fromstring(content)
+                ads=list(root.findall("Ad"))
+                assert len(ads)==count,(src,len(ads),count)
+                for ad in ads:
+                    adid=ad.findtext("Id","")
+                    assert adid.startswith("smx_renew_261126_"),adid
+                    assert adid not in ids, ("duplicate ID", adid)
+                    ids.add(adid)
+                    model=ad.findtext("Model","")
+                    memory=ad.findtext("MemorySize","")
+                    sku=(model,memory)
+                    price=prices.get(sku)
+                    if price is not None:
+                       assert int(ad.findtext("Price"))==price,(sku,adid)
+                       observed.add(sku)
+                    imgs=ad.find("Images")
+                    assert imgs is not None and len(list(imgs))==6, adid
+                dst.parent.mkdir(parents=True,exist_ok=True)
+                dst.write_bytes(content)
+                print(dst, len(ads), len(content))
+                total+=len(ads)
+          assert total==49966
+          assert len(ids)==49966
+          assert observed==set(prices),("missing price categories",set(prices)-observed)
+          print("VALIDATION OK: 49966 expired-only ads, 49966 new IDs, 6 photos each, all 8 specified prices")
+          PY
+      - name: Commit final three XML links
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feeds/smartx-final-part-1-00001-20000.xml feeds/smartx-final-part-2-20001-40000.xml feeds/smartx-final-part-3-40001-50000.xml
+          git diff --cached --quiet && { echo "No feed content changes"; exit 0; }
+          git commit -m "Publish 49966 expired SmartX ads with renewed IDs and prices [skip ci]"
+          git push
