@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --quiet gdown
-          gdown --id 1_bjdnALGvr1X7IllPlRsL5XsYg7giDq1 -O /tmp/SmartX_expired.zip
+          gdown 'https://drive.google.com/uc?id=1_bjdnALGvr1X7IllPlRsL5XsYg7giDq1' -O /tmp/SmartX_expired.zip
           echo '20042fd1c7b1863ee1cc8afea8264bd368022bea5c795bc6cd996e8117114f99  /tmp/SmartX_expired.zip' | sha256sum --check
       - name: Verify and replace three existing feeds
         shell: bash
